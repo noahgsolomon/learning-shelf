@@ -16,12 +16,6 @@ const script = "'Caveat', cursive";
 const slab = "'Zilla Slab', serif";
 const sharpie = "'Permanent Marker', cursive";
 
-const PIN_FILLS = [
-  "radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a)",
-  "radial-gradient(circle at 30% 30%, #4dabf7, #1864ab)",
-  "radial-gradient(circle at 30% 30%, #69db7c, #2f9e44)",
-  "radial-gradient(circle at 30% 30%, #ffd43b, #f59f00)",
-];
 const STICKY_FILLS = [
   "linear-gradient(135deg, #FFE066 0%, #FFD43B 100%)",
   "linear-gradient(135deg, #A5D8FF 0%, #74C0FC 100%)",
@@ -59,7 +53,7 @@ function Backdrop({ onClose, children }: { onClose: () => void; children: React.
 
 // ── Polaroid ──────────────────────────────────────────────────────────────
 
-export function Polaroid({ src, name, index }: { src: string; name: string; index: number }) {
+export function Polaroid({ src, name, since, index }: { src: string; name: string; since?: string; index: number }) {
   const [open, setOpen] = useState(false);
   const lean = index % 2 === 0 ? "4deg" : "-3.5deg";
   const id = `polaroid-${name.toLowerCase()}`;
@@ -103,7 +97,9 @@ export function Polaroid({ src, name, index }: { src: string; name: string; inde
               transition={MORPH}
               onClick={() => setOpen(false)}
               style={{
-                width: "min(78vw, 380px)",
+                // also clamped by viewport height (square photo + chin), so
+                // the card always fits — no scrolling a polaroid
+                width: "min(78vw, 380px, calc(88vh - 150px))",
                 background: "#FDFDFB",
                 padding: "16px 16px 0",
                 boxShadow: "0 6px 16px rgba(20,16,12,0.45), 0 24px 60px rgba(20,16,12,0.4)",
@@ -117,19 +113,25 @@ export function Polaroid({ src, name, index }: { src: string; name: string; inde
                 alt={name}
                 style={{ display: "block", width: "100%", aspectRatio: "1 / 1", objectFit: "cover", filter: "saturate(0.92) contrast(1.02)" }}
               />
-              {/* the sharpie chin */}
-              <div
+              {/* the sharpie chin — modal-only info fades in after the morph */}
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0, transition: { delay: 0.16, duration: 0.25 } }}
                 style={{
                   fontFamily: sharpie,
-                  fontSize: "clamp(24px, 6vw, 34px)",
                   color: "#33302B",
                   textAlign: "center",
-                  padding: "16px 0 20px",
+                  padding: "14px 0 18px",
                   transform: "rotate(-1.6deg)",
                 }}
               >
-                {name.toLowerCase()}
-              </div>
+                <div style={{ fontSize: "clamp(24px, 6vw, 34px)", lineHeight: 1.05 }}>{name.toLowerCase()}</div>
+                {since && (
+                  <div style={{ fontSize: "clamp(13px, 3vw, 16px)", opacity: 0.6, marginTop: "2px" }}>
+                    on the shelf since {since}
+                  </div>
+                )}
+              </motion.div>
             </motion.div>
           </Backdrop>
         )}
@@ -149,7 +151,6 @@ export function DepthTag({ doc, tilt = 0 }: { doc: DocMeta; tilt?: number }) {
   if (doc.wordCount <= 0) return null;
   const now = depthIndex(doc.wordCount);
   const fill = STICKY_FILLS[tilt % STICKY_FILLS.length];
-  const pin = PIN_FILLS[tilt % PIN_FILLS.length];
   const id = `depth-${doc.slug}`;
 
   return (
@@ -208,7 +209,7 @@ export function DepthTag({ doc, tilt = 0 }: { doc: DocMeta; tilt?: number }) {
                 rotate: "0.6deg",
               }}
             >
-              <DepthReport doc={doc} fill={fill} pin={pin} />
+              <DepthReport doc={doc} fill={fill} />
             </motion.div>
           </Backdrop>
         )}
@@ -218,7 +219,7 @@ export function DepthTag({ doc, tilt = 0 }: { doc: DocMeta; tilt?: number }) {
 }
 
 // The full dive report — everything the little sticky had no room for.
-function DepthReport({ doc, fill, pin }: { doc: DocMeta; fill: string; pin: string }) {
+function DepthReport({ doc, fill }: { doc: DocMeta; fill: string }) {
   const now = depthIndex(doc.wordCount);
   const headed = projectedDepthIndex(doc.wordCount, doc.modulesDone, doc.modulesTotal);
   const next = now < DEPTH_LEVELS.length - 1 ? DEPTH_LEVELS[now + 1] : null;
@@ -238,21 +239,6 @@ function DepthReport({ doc, fill, pin }: { doc: DocMeta; fill: string; pin: stri
         color: ink,
       }}
     >
-      <span
-        aria-hidden
-        style={{
-          position: "absolute",
-          top: "-9px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "16px",
-          height: "16px",
-          borderRadius: "50%",
-          background: pin,
-          boxShadow: "0 2px 4px rgba(45,42,38,0.5), inset -2px -2px 4px rgba(0,0,0,0.2)",
-        }}
-      />
-
       <div style={{ fontFamily: sharpie, fontSize: "24px", lineHeight: 1.1, transform: "rotate(-1.2deg)" }}>
         depth report
       </div>
@@ -260,7 +246,12 @@ function DepthReport({ doc, fill, pin }: { doc: DocMeta; fill: string; pin: stri
         {doc.subject.toLowerCase()}
       </div>
 
-      {/* the ladder — every zone, with "you are here" scrawled at the level */}
+      {/* the ladder — every zone, with "you are here" scrawled at the level.
+          all of this is modal-only info, so it fades in after the morph */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0, transition: { delay: 0.16, duration: 0.25 } }}
+      >
       <div style={{ display: "grid", gap: "6px", margin: "18px 0 0" }}>
         {DEPTH_LEVELS.map((l, i) => {
           const reached = i <= now;
@@ -317,6 +308,7 @@ function DepthReport({ doc, fill, pin }: { doc: DocMeta; fill: string; pin: stri
           ({wordsToNext.toLocaleString()} words to {next.label} {next.emoji})
         </div>
       )}
+      </motion.div>
     </div>
   );
 }

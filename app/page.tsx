@@ -6,7 +6,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { cookies } from "next/headers";
-import { listAvatarAuthors, listDocs, listJoinedAuthors, type DocMeta } from "@/lib/store";
+import { getAuthorRecord, listAvatarAuthors, listDocs, listJoinedAuthors, type DocMeta } from "@/lib/store";
 import { OWNER_COOKIE } from "@/lib/owner";
 import { AuthorPanel, type AuthorGroup } from "@/lib/sections";
 import { LetsLearn } from "./LetsLearn";
@@ -50,6 +50,21 @@ export default async function ShelfPage() {
     ? cookieValue.slice(0, cookieValue.indexOf("."))
     : null;
   const groups = groupByAuthor(docs);
+  // When their corner was claimed — shown on the enlarged polaroid's chin.
+  const joinedSince = new Map<string, string>();
+  await Promise.all(
+    [...avatarAuthors].map(async (a) => {
+      const record = await getAuthorRecord(a);
+      if (record?.createdAt) {
+        joinedSince.set(
+          a,
+          new Date(record.createdAt)
+            .toLocaleString("en-US", { month: "short", year: "numeric" })
+            .toLowerCase(),
+        );
+      }
+    }),
+  );
   // Members who announced themselves but haven't published yet get an empty
   // corner at the end of the board, already wearing their chosen design.
   for (const member of joined) {
@@ -183,7 +198,11 @@ export default async function ShelfPage() {
               index={i}
               avatar={
                 avatarAuthors.has(group.author.toLowerCase())
-                  ? { src: `/a/${group.author.toLowerCase()}`, name: group.author }
+                  ? {
+                      src: `/a/${group.author.toLowerCase()}`,
+                      name: group.author,
+                      since: joinedSince.get(group.author.toLowerCase()),
+                    }
                   : undefined
               }
             >
@@ -236,7 +255,7 @@ function PinnedPage({
   children,
 }: {
   index: number;
-  avatar?: { src: string; name: string };
+  avatar?: { src: string; name: string; since?: string };
   children: ReactNode;
 }) {
   return (
@@ -247,7 +266,7 @@ function PinnedPage({
       }}
     >
       {/* the author's polaroid, overlapping the paper's top-right corner */}
-      {avatar && <Polaroid src={avatar.src} name={avatar.name} index={index} />}
+      {avatar && <Polaroid src={avatar.src} name={avatar.name} since={avatar.since} index={index} />}
       {/* masking tape across the top */}
       <div
         aria-hidden
