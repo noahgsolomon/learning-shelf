@@ -1,8 +1,9 @@
 // Invite bundle generator: given a friend's name (and a band style), produce
-// one paste-into-Claude installer document that carries all three skills —
+// one paste-into-your-agent installer document that carries all three skills —
 // the shelf contributor skill (with the secret), the learn skill (how this
 // group likes to learn), and the beautiful-html-templates skill. The friend
-// pastes the whole thing into Claude Code and their Claude installs itself.
+// pastes the whole thing into Claude Code OR Codex and the agent installs the
+// kit for BOTH tools, so whichever one they use (now or later) knows the shelf.
 
 import { STYLE_TOKENS } from "./styleTokens";
 
@@ -15,43 +16,49 @@ export function buildInviteInstaller(rawName: string, style: string): string {
 
   return `# Welcome to The Shelf, ${name}!
 
-Paste this ENTIRE message to your Claude in the Claude Code desktop app.
+Paste this ENTIRE message to your coding agent — Claude Code or Codex, either
+works. The kit installs itself for BOTH tools.
 
 ---
 
-**Claude:** ${name} has been invited to The Shelf — a corkboard website where a
+**Agent:** ${name} has been invited to The Shelf — a corkboard website where a
 group of friends pin living HTML learning docs, each written and republished by
-that person's Claude as they learn. Your job right now:
+that person's coding agent as they learn. Your job right now:
 
-1. Create the three skill files below, at exactly these paths, with exactly the
-   contents given:
-   - \`~/.claude/skills/learning-shelf/SKILL.md\`
-   - \`~/.claude/skills/learn/SKILL.md\`
-   - \`~/.claude/skills/beautiful-html-templates/SKILL.md\`
+1. Create the three skill files below in BOTH tools' homes — even if only one
+   of the tools is installed today, create both sets, so the other tool is
+   ready the moment ${name} adopts it. Same contents at each path:
+   - \`~/.claude/skills/learning-shelf/SKILL.md\` and \`~/.codex/skills/learning-shelf/SKILL.md\`
+   - \`~/.claude/skills/learn/SKILL.md\` and \`~/.codex/skills/learn/SKILL.md\`
+   - \`~/.claude/skills/beautiful-html-templates/SKILL.md\` and \`~/.codex/skills/beautiful-html-templates/SKILL.md\`
 2. Add the "Learning → The Shelf" block (further below, after the skill files)
-   to \`~/.claude/CLAUDE.md\` — create that file if it doesn't exist, and skip if
-   a "## Learning → The Shelf" section is already there. This is what makes you
-   proactively offer a tracked learning plan whenever ${name} wants to learn
-   something.
+   to BOTH \`~/.claude/CLAUDE.md\` and \`~/.codex/AGENTS.md\` — create either
+   file if it doesn't exist, and skip a file if it already has a
+   "## Learning → The Shelf" section. In \`~/.codex/AGENTS.md\`, prepend the
+   block with this line (Codex doesn't auto-discover skills):
+   "Skills for this live at \`~/.codex/skills/*/SKILL.md\` — read the relevant
+   SKILL.md and follow it whenever a skill is named below."
+   This block is what makes you proactively offer a tracked learning plan
+   whenever ${name} wants to learn something.
 3. Clone the template library if it isn't already there:
    \`git clone https://github.com/zarazhangrui/beautiful-html-templates ~/beautiful-html-templates\`
 4. Confirm what you installed, show ${name} the board at ${SHELF_URL},
    then ask what they're learning right now and offer to start their first doc
    (the learning-shelf skill explains the whole ritual).
 
-──────── file: ~/.claude/skills/learning-shelf/SKILL.md ────────
+──────── file: ~/.claude/skills/learning-shelf/SKILL.md AND ~/.codex/skills/learning-shelf/SKILL.md ────────
 
 ${shelfSkill(name, author, bandStyle)}
 
-──────── file: ~/.claude/skills/learn/SKILL.md ────────
+──────── file: ~/.claude/skills/learn/SKILL.md AND ~/.codex/skills/learn/SKILL.md ────────
 
 ${learnSkill()}
 
-──────── file: ~/.claude/skills/beautiful-html-templates/SKILL.md ────────
+──────── file: ~/.claude/skills/beautiful-html-templates/SKILL.md AND ~/.codex/skills/beautiful-html-templates/SKILL.md ────────
 
 ${templatesSkill()}
 
-──────── append to ~/.claude/CLAUDE.md (skip if already present) ────────
+──────── append to ~/.claude/CLAUDE.md AND ~/.codex/AGENTS.md (skip if already present) ────────
 
 ${learningPlanRule(name, author, bandStyle)}
 

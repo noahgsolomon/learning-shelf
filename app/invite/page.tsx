@@ -2,8 +2,8 @@
 
 // The join desk: a newcomer (who a friend gave the password to) lands here,
 // enters their own name + the password + picks a corner design, and gets a
-// paste-into-Claude installer carrying all three skills. They paste it into
-// the Claude Code desktop app and their Claude sets everything up.
+// paste-into-your-agent installer carrying all three skills. They paste it
+// into Claude Code or Codex and the agent sets everything up for both tools.
 
 import { useState } from "react";
 import { STYLE_TOKENS } from "@/lib/styleTokens";
@@ -223,9 +223,10 @@ export default function InvitePage() {
               done, {name.trim().split(/\s+/)[0]}! here&apos;s your kit ✉
             </p>
             <p style={{ margin: "8px 0 14px", fontFamily: slab, fontSize: "15.5px", lineHeight: 1.55 }}>
-              Paste the whole thing into your Claude Code desktop app. Your
-              Claude installs the three skills (the shelf, how we like to learn,
-              and the template library), then helps you start your first doc.
+              Paste the whole thing into Claude Code or Codex — either works.
+              Your agent installs the three skills for both tools (the shelf,
+              how we like to learn, and the template library), then helps you
+              start your first doc.
             </p>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "14px" }}>
               <button onClick={copy} style={btnStyle("#A5D8FF")}>{copied ? "copied ✓" : "copy it"}</button>
