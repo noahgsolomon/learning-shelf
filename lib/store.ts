@@ -14,6 +14,13 @@ export type DocMeta = {
   author: string;
   template: string; // the template the DOC itself uses (per doc)
   authorStyle: string; // the design language of the author's directory band
+  // Progress through the topic's modules. A topic is broken into a planned set
+  // of modules, taught one at a time; modulesDone / modulesTotal is how far in
+  // the learner is. currentModule names the one being worked now. Zero total
+  // means progress isn't tracked for this doc.
+  modulesDone: number;
+  modulesTotal: number;
+  currentModule: string;
   updatedAt: string; // ISO
 };
 
@@ -89,9 +96,24 @@ export async function listDocs(): Promise<DocMeta[]> {
     if (!m.authorStyle) m.authorStyle = "plain";
     if (!m.subject) m.subject = m.title;
     if (!m.description) m.description = "";
+    if (typeof m.modulesDone !== "number") m.modulesDone = 0;
+    if (typeof m.modulesTotal !== "number") m.modulesTotal = 0;
+    if (!m.currentModule) m.currentModule = "";
   }
 
   return metas.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+export async function deleteDoc(slug: string): Promise<void> {
+  if (usingBlob()) {
+    const { del } = await import("@vercel/blob");
+    await del([`docs/${slug}.html`, `docs/${slug}.meta.json`]).catch(() => {});
+    return;
+  }
+
+  const { unlink } = await import("node:fs/promises");
+  await unlink(join(DATA_DIR, `${slug}.html`)).catch(() => {});
+  await unlink(join(DATA_DIR, `${slug}.meta.json`)).catch(() => {});
 }
 
 export async function getDocHtml(slug: string): Promise<string | undefined> {

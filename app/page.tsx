@@ -147,19 +147,16 @@ export default async function ShelfPage() {
           )}
         </header>
 
-        {groups.length === 0 ? (
-          <div style={{ background: "#fff", border: `2px solid ${ink}`, padding: "24px", boxShadow: noteShadow, transform: "rotate(-1deg)", fontFamily: slab, fontSize: "17px", maxWidth: "480px" }}>
-            Nothing pinned yet. Publish the first doc with the shelf skill.
-          </div>
-        ) : (
-          <div style={{ display: "grid", gap: "56px", paddingBottom: "24px" }}>
-            {groups.map((group, i) => (
-              <PinnedPage key={group.author} index={i} label={`${group.author.toLowerCase()}.html`}>
-                <AuthorPanel group={group} />
-              </PinnedPage>
-            ))}
-          </div>
-        )}
+        <div style={{ display: "grid", gap: "56px", paddingBottom: "24px" }}>
+          {groups.map((group, i) => (
+            <PinnedPage key={group.author} index={i} label={`${group.author.toLowerCase()}.html`}>
+              <AuthorPanel group={group} />
+            </PinnedPage>
+          ))}
+          {/* an always-present empty spot so the board reads as "room for more"
+              rather than finished — and the only CTA when it's brand new */}
+          <EmptyCorner index={groups.length} lonely={groups.length === 0} />
+        </div>
 
         <footer
           style={{
@@ -278,6 +275,67 @@ function PinnedPage({
         fill={pinFills[index % pinFills.length]}
         style={{ left: "28px", top: "-9px", transform: "none", zIndex: 8 }}
       />
+    </div>
+  );
+}
+
+// The board is never "done" — an empty page pinned at the end reads as a spot
+// waiting for a friend, and is the whole board when nobody has published yet.
+function EmptyCorner({ index, lonely }: { index: number; lonely: boolean }) {
+  return (
+    <div style={{ position: "relative", transform: `rotate(${index % 2 === 0 ? "0.8deg" : "-0.9deg"})` }}>
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: "-13px",
+          left: "50%",
+          transform: "translateX(-50%) rotate(-2deg)",
+          width: "116px",
+          height: "30px",
+          background: "repeating-linear-gradient(90deg, rgba(255,255,255,0.42) 0 6px, rgba(255,255,255,0.30) 6px 12px)",
+          border: "1px solid rgba(255,255,255,0.32)",
+          zIndex: 5,
+        }}
+      />
+      <div
+        style={{
+          border: "2px dashed rgba(45,42,38,0.5)",
+          background: "rgba(251,248,239,0.35)",
+          borderRadius: "3px",
+          padding: "44px 28px",
+          textAlign: "center",
+          display: "grid",
+          gap: "12px",
+          placeItems: "center",
+        }}
+      >
+        <p style={{ margin: 0, fontFamily: display, fontSize: "clamp(26px,3.4vw,38px)", lineHeight: 1, color: "#FBF7EE", textShadow: "2px 2px 0 rgba(45,42,38,0.4)" }}>
+          {lonely ? "the board's empty" : "an empty spot"}
+        </p>
+        <p style={{ margin: 0, fontFamily: script, fontWeight: 600, fontSize: "22px", color: "#3B2F21", maxWidth: "34ch" }}>
+          {lonely
+            ? "be the first to pin what you're learning — or invite the crew."
+            : "room for another corner — invite a friend to claim it."}
+        </p>
+        <a
+          href="/invite"
+          style={{
+            fontFamily: display,
+            fontSize: "17px",
+            color: ink,
+            textDecoration: "none",
+            background: "#FFC9C9",
+            border: `2px solid ${ink}`,
+            boxShadow: `3px 3px 0 ${ink}`,
+            padding: "9px 20px",
+            transform: "rotate(-1deg)",
+          }}
+        >
+          invite a friend ✂
+        </a>
+      </div>
+      <Pin fill="radial-gradient(circle at 30% 30%, #ffd43b, #f59f00)" style={{ left: "28px", top: "-9px", transform: "none", zIndex: 6 }} />
     </div>
   );
 }

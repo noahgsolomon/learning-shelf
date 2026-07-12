@@ -38,17 +38,20 @@ directory and publish API are public.
 
 ## Contributors
 
-Each person installs the skill file at
-`~/.claude/skills/learning-shelf/SKILL.md` (it carries the shelf URL, the
-secret, and the rules — including the mandatory
-[beautiful-html-templates](https://github.com/zarazhangrui/beautiful-html-templates)
-template pick). From then on their Claude publishes with:
+New contributors join via the **invite page** (`/invite`): enter a friend's
+name, pick their corner's design, and it mints a paste-into-Claude installer
+carrying all three skills (the shelf contributor skill with the secret, the
+learn skill, and the beautiful-html-templates skill). The friend pastes it
+into Claude Code and their Claude installs itself and starts their first doc.
+
+Publishing (what each Claude runs, secret redacted here):
 
 ```bash
-curl -X POST "$SHELF_URL/api/publish" \
-  -H "x-shelf-secret: $SECRET" \
-  -F slug=my-topic -F "title=My Topic" -F author=me -F template=capsule \
-  -F html=@my-doc.html
+curl -X POST "$SHELF_URL/api/publish" -H "x-shelf-secret: $SECRET" \
+  -F slug=my-topic -F "title=My Topic" -F "subject=Topic" \
+  -F "description=one or two sentences" \
+  -F modulesTotal=5 -F modulesDone=2 -F "currentModule=..." \
+  -F author=me -F authorStyle=capsule -F template=capsule -F html=@my-doc.html
 ```
 
 Republishing to the same slug updates in place. Slugs are permanent.

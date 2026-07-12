@@ -102,6 +102,9 @@ curl -sS -X POST "${SHELF_URL}/api/publish" \\
   -F "title=<Human Readable Title>" \\
   -F "subject=<what is actually being learned, e.g. Ceramics>" \\
   -F "description=<one or two friendly sentences for the directory card>" \\
+  -F "modulesTotal=<planned number of modules for this topic>" \\
+  -F "modulesDone=<how many modules are actually written so far>" \\
+  -F "currentModule=<name of the module being learned right now>" \\
   -F "author=${author}" \\
   -F "authorStyle=${bandStyle}" \\
   -F "template=<the template slug you chose for THIS doc>" \\
@@ -111,6 +114,12 @@ curl -sS -X POST "${SHELF_URL}/api/publish" \\
 - \`slug\` is permanent — pick once; republishing to the same slug updates in place.
 - \`subject\` and \`description\` are what the directory card shows; keep the
   description fresh as the doc evolves.
+- **Progress fields** power the little progress bar on ${name}'s card. A topic
+  is broken into modules (see the learn skill); \`modulesTotal\` is the planned
+  count, \`modulesDone\` is how many are actually written into the doc, and
+  \`currentModule\` is the one ${name} is on now. Bump \`modulesDone\` every time
+  a module is finished, and re-publish. If you're not tracking modules for a
+  doc, omit these three.
 - The response is JSON: \`{ ok: true, url: "/d/<slug>" }\`. On error, read the
   \`error\` field.
 - Verify after publishing: the directory at \`${SHELF_URL}/\` shows the doc
@@ -251,6 +260,27 @@ Instead:
 3. Explain why that concept comes first.
 4. Teach only that concept.
 5. Check understanding before continuing.
+
+## Modules and Progress
+
+A topic is learned as an ordered set of MODULES — the prerequisite chain from
+above, each module being one coherent concept or milestone. Two rules:
+
+1. **Plan the module list up front, but generate only ONE module at a time.**
+   When the user picks a topic, sketch the full set of planned modules (this is
+   the total). Then teach and write only the current module. Do not run ahead
+   and generate later modules until the user signals they are ready to proceed.
+
+2. **Progress is modules-done over modules-total.** If the plan has X modules
+   and the user has genuinely worked through 2 of them, progress is 2 / X. The
+   count of modules can grow as understanding deepens — that is fine; update the
+   total when the plan honestly changes.
+
+This maps directly onto the learning doc on The Shelf (if the user keeps one):
+the doc gains one module section at a time, and each time you finish a module
+and re-publish, you bump \`modulesDone\` and set \`currentModule\` to the next
+one. The progress bar on their card is that ratio. Never inflate it — the bar
+should reflect what is actually written and understood, not what is planned.
 
 ## When the User Asks for a Quick Answer
 

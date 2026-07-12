@@ -41,6 +41,40 @@ export function AuthorPanel({ group }: { group: AuthorGroup }) {
 
 const date = (iso: string) => iso.slice(0, 10);
 
+// A tiny progress meter for a doc's module journey. Rendered in the card's own
+// ink + accent so it fits whatever style it lands in. Hidden when a doc has no
+// module total set.
+function ProgressBar({
+  doc,
+  ink,
+  accent,
+  font,
+  onDark = false,
+}: {
+  doc: DocMeta;
+  ink: string;
+  accent: string;
+  font: string;
+  onDark?: boolean;
+}) {
+  if (!doc.modulesTotal || doc.modulesTotal <= 0) return null;
+  const pct = Math.max(0, Math.min(100, Math.round((doc.modulesDone / doc.modulesTotal) * 100)));
+  const trackBg = onDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
+  return (
+    <div style={{ display: "grid", gap: "5px", marginTop: "2px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", fontFamily: font, fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: ink, opacity: 0.85 }}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {doc.currentModule ? `on: ${doc.currentModule}` : "progress"}
+        </span>
+        <span style={{ whiteSpace: "nowrap" }}>{doc.modulesDone} / {doc.modulesTotal}</span>
+      </div>
+      <div style={{ height: "8px", border: `1.5px solid ${ink}`, background: trackBg, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: "0 auto 0 0", width: `${pct}%`, background: accent }} />
+      </div>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // COBALT GRID — cream paper, one strict cobalt accent, faint graph-paper,
 // Newsreader serif + DM Mono, hairline ledger rows.
@@ -95,6 +129,9 @@ function CobaltGridPanel({ group }: { group: AuthorGroup }) {
                 {doc.description}
               </span>
             )}
+            <span style={{ display: "block", marginTop: "10px", maxWidth: "32ch" }}>
+              <ProgressBar doc={doc} ink={ink} accent={ink} font={sans} />
+            </span>
           </span>
           <span style={{ fontFamily: mono, fontSize: "11px", letterSpacing: "0.04em", textAlign: "right", whiteSpace: "nowrap", paddingTop: "8px", opacity: 0.85 }}>
             {doc.title}
@@ -145,6 +182,7 @@ function BlockFramePanel({ group }: { group: AuthorGroup }) {
               {doc.description && (
                 <p style={{ margin: 0, fontFamily: body, fontSize: "13px", lineHeight: 1.55, color: "#222" }}>{doc.description}</p>
               )}
+              <ProgressBar doc={doc} ink={black} accent={fills[i % fills.length]} font={body} />
               <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", fontFamily: body, fontWeight: 700, fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.07em", borderTop: `2px solid ${black}`, paddingTop: "9px" }}>
                 <span>{doc.title}</span>
                 <span style={{ opacity: 0.55, whiteSpace: "nowrap" }}>{date(doc.updatedAt)}</span>
@@ -193,6 +231,7 @@ function DaisyDaysPanel({ group }: { group: AuthorGroup }) {
               {doc.description && (
                 <p style={{ margin: 0, fontFamily: body, fontWeight: 500, fontSize: "13px", lineHeight: 1.55 }}>{doc.description}</p>
               )}
+              <ProgressBar doc={doc} ink={inkc} accent={caps[i % caps.length]} font={body} />
               <span style={{ fontFamily: body, fontWeight: 700, fontSize: "11.5px", opacity: 0.6 }}>updated {date(doc.updatedAt)}</span>
             </div>
           </a>
@@ -264,6 +303,9 @@ function EightBitOrbitPanel({ group }: { group: AuthorGroup }) {
               <span aria-hidden style={{ position: "absolute", bottom: "-2px", right: "-2px", width: "14px", height: "14px", borderBottom: `3px solid ${ac}`, borderRight: `3px solid ${ac}` }} />
               <h3 style={{ margin: 0, fontFamily: display, fontWeight: 700, fontSize: "23px", lineHeight: 1.05, color: ac, textTransform: "uppercase" }}>{doc.subject}</h3>
               {doc.description && <p style={{ margin: "10px 0 0", fontFamily: body, fontSize: "13px", lineHeight: 1.55, color: lav }}>{doc.description}</p>}
+              <div style={{ marginTop: "12px" }}>
+                <ProgressBar doc={doc} ink={ac} accent={ac} font={body} onDark />
+              </div>
               <div style={{ marginTop: "12px", fontFamily: mono, fontSize: "10.5px", letterSpacing: "0.06em", color: yellow, textTransform: "uppercase", opacity: 0.85 }}>
                 {doc.title} · {date(doc.updatedAt)}
               </div>
@@ -329,6 +371,9 @@ function PinAndPaperPanel({ group }: { group: AuthorGroup }) {
             </div>
             <h3 style={{ margin: 0, fontFamily: script, fontWeight: 700, fontSize: "30px", lineHeight: 0.95, color: ink }}>{doc.subject}</h3>
             {doc.description && <p style={{ margin: "8px 0 0", fontFamily: body, fontSize: "13px", lineHeight: 1.5, color: ink }}>{doc.description}</p>}
+            <div style={{ marginTop: "12px" }}>
+              <ProgressBar doc={doc} ink={ink} accent={red} font={body} />
+            </div>
             <div style={{ marginTop: "12px", fontFamily: mono, fontSize: "10.5px", letterSpacing: "0.05em", color: ink, opacity: 0.6 }}>
               {date(doc.updatedAt)}
             </div>
@@ -390,6 +435,7 @@ function GenericPanel({ group, token }: { group: AuthorGroup; token: StyleToken 
             <div style={{ padding: "18px", display: "grid", gap: "10px", alignContent: "start" }}>
               <h3 style={{ margin: 0, fontFamily: token.display, fontWeight: 700, fontSize: "24px", lineHeight: 1.02 }}>{doc.subject}</h3>
               {doc.description && <p style={{ margin: 0, fontFamily: token.body, fontSize: "13px", lineHeight: 1.55 }}>{doc.description}</p>}
+              <ProgressBar doc={doc} ink={token.ink} accent={token.accent} font={token.body} />
               <div style={{ fontFamily: token.body, fontWeight: 700, fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", opacity: 0.6, borderTop: `1.5px solid ${token.ink}`, paddingTop: "9px" }}>
                 {doc.title} · {date(doc.updatedAt)}
               </div>
@@ -423,6 +469,7 @@ function PlainPanel({ group }: { group: AuthorGroup }) {
           <a key={doc.slug} href={`/d/${doc.slug}`} style={{ border: `1.5px solid ${ink}`, padding: "16px", textDecoration: "none", color: ink, display: "grid", gap: "8px", alignContent: "start" }}>
             <strong style={{ fontSize: "19px" }}>{doc.subject}</strong>
             {doc.description && <span style={{ fontSize: "13px", lineHeight: 1.5, opacity: 0.8 }}>{doc.description}</span>}
+            <ProgressBar doc={doc} ink={ink} accent={ink} font="system-ui, sans-serif" />
             <span style={{ fontSize: "11px", opacity: 0.6 }}>{doc.title} · {date(doc.updatedAt)}</span>
           </a>
         ))}

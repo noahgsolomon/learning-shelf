@@ -7,7 +7,7 @@
 //     -F author=noah -F template=sakura-chroma \
 //     -F html=@softshell-log.html
 
-import { publishDoc } from "@/lib/store";
+import { deleteDoc, publishDoc } from "@/lib/store";
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const MAX_HTML_BYTES = 5 * 1024 * 1024;
@@ -41,6 +41,10 @@ export async function POST(request: Request): Promise<Response> {
   // What is actually being learned + a sentence for the directory card.
   const subject = String(form.get("subject") ?? "").slice(0, 80);
   const description = String(form.get("description") ?? "").slice(0, 280);
+  // Progress through the topic's modules (optional but encouraged).
+  const modulesDone = clampInt(form.get("modulesDone"), 0, 999);
+  const modulesTotal = clampInt(form.get("modulesTotal"), 0, 999);
+  const currentModule = String(form.get("currentModule") ?? "").slice(0, 80);
 
   const htmlField = form.get("html");
   const html =
@@ -66,11 +70,33 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const meta = await publishDoc(
-    { slug, title, subject, description, author, template, authorStyle },
+    {
+      slug, title, subject, description, author, template, authorStyle,
+      modulesDone, modulesTotal, currentModule,
+    },
     html,
   );
 
   return json(200, { ok: true, url: `/d/${slug}`, meta });
+}
+
+// Remove a doc. Same shared secret; slug in the query string.
+export async function DELETE(request: Request): Promise<Response> {
+  if (request.headers.get("x-shelf-secret") !== process.env.SHELF_SECRET) {
+    return json(401, { error: "bad or missing x-shelf-secret header" });
+  }
+  const slug = new URL(request.url).searchParams.get("slug") ?? "";
+  if (!SLUG_PATTERN.test(slug)) {
+    return json(400, { error: "slug must match " + String(SLUG_PATTERN) });
+  }
+  await deleteDoc(slug);
+  return json(200, { ok: true, deleted: slug });
+}
+
+function clampInt(value: FormDataEntryValue | null, lo: number, hi: number): number {
+  const n = Math.floor(Number(value ?? 0));
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(lo, Math.min(hi, n));
 }
 
 function json(status: number, body: unknown): Response {
