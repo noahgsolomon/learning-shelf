@@ -7,7 +7,6 @@
 
 import { useState } from "react";
 import { STYLE_TOKENS } from "@/lib/styleTokens";
-import { Sticky } from "@/lib/Sticky";
 
 const ink = "#2D2A26";
 const display = "'Shrikhand', cursive";
@@ -84,13 +83,17 @@ export default function InvitePage() {
         </h1>
 
         {/* the form, on a green sticky */}
-        <Sticky
-          background="linear-gradient(135deg, #B2F2BB 0%, #8CE99A 100%)"
-          rotate="-0.8deg"
-          pinFill="radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a)"
-          padding="28px 30px 34px"
-          wrapStyle={{ marginTop: "30px", display: "block", width: "100%" }}
+        <div
+          style={{
+            position: "relative",
+            marginTop: "30px",
+            background: "linear-gradient(135deg, #B2F2BB 0%, #8CE99A 100%)",
+            padding: "26px 28px 24px",
+            boxShadow: noteShadow,
+            transform: "rotate(-0.8deg)",
+          }}
         >
+          <span aria-hidden style={{ position: "absolute", top: "-8px", left: "50%", transform: "translateX(-50%)", width: "16px", height: "16px", borderRadius: "50%", background: "radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a)", boxShadow: "0 2px 4px rgba(45,42,38,0.5), inset -2px -2px 4px rgba(0,0,0,0.2)" }} />
           <label style={{ display: "block", fontFamily: script, fontWeight: 700, fontSize: "24px", marginBottom: "8px" }}>
             what&apos;s your name?
           </label>
@@ -202,15 +205,19 @@ export default function InvitePage() {
               {error}
             </p>
           )}
-        </Sticky>
+        </div>
 
         {installer && (
-          <Sticky
-            background="linear-gradient(180deg, #FFFEF8 0%, #FDF6E0 100%)"
-            rotate="0.5deg"
-            pinFill="radial-gradient(circle at 30% 30%, #69db7c, #2f9e44)"
-            padding="26px 28px 34px"
-            wrapStyle={{ marginTop: "36px", display: "block", width: "100%" }}
+          <div
+            style={{
+              position: "relative",
+              marginTop: "36px",
+              background: "#FFFDF5",
+              border: `2px solid ${ink}`,
+              padding: "24px 26px",
+              boxShadow: noteShadow,
+              transform: "rotate(0.5deg)",
+            }}
           >
             <p style={{ margin: 0, fontFamily: script, fontWeight: 700, fontSize: "24px" }}>
               done, {name.trim().split(/\s+/)[0]}! here&apos;s your kit ✉
@@ -241,7 +248,7 @@ export default function InvitePage() {
                 resize: "vertical",
               }}
             />
-          </Sticky>
+          </div>
         )}
       </div>
     </main>
