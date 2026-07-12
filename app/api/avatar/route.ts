@@ -10,7 +10,9 @@ import { avatarExtFor, setAvatar } from "@/lib/store";
 import { verifyOwner } from "@/lib/owner";
 
 const AUTHOR_PATTERN = /^[a-z0-9][a-z0-9-]{0,59}$/;
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+// Generous on purpose — in practice the host caps request bodies (~4.5MB on
+// Vercel serverless) well before this, so ours is just a sanity backstop.
+const MAX_IMAGE_BYTES = 50 * 1024 * 1024;
 
 export async function POST(request: Request): Promise<Response> {
   const secret = process.env.SHELF_SECRET;
@@ -42,7 +44,7 @@ export async function POST(request: Request): Promise<Response> {
     return json(400, { error: "image must be png, jpeg, webp, or gif" });
   }
   if (image.size > MAX_IMAGE_BYTES) {
-    return json(413, { error: "image exceeds 2MB — resize it down first" });
+    return json(413, { error: "image exceeds 50MB — resize it down first" });
   }
 
   // Only the corner's owner can hang (or replace) its polaroid.

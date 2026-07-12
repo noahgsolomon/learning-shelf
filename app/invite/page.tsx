@@ -19,6 +19,37 @@ export default function InvitePage() {
   const [style, setStyle] = useState(STYLE_TOKENS[0].id);
   const [password, setPassword] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  // Take any image the user hands us — file picker or drag-and-drop — and
+  // make it uploadable: big phone photos (Apple shots are routinely >2MB)
+  // get downscaled on a canvas so they sail under the host's ~4.5MB request
+  // cap. Renders at 86px on the board, so 1200px is already generous.
+  async function acceptPhoto(f: File | null) {
+    setError(null);
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      setError("that doesn't look like an image");
+      return;
+    }
+    if (f.size <= 3.5 * 1024 * 1024) {
+      setPhoto(f);
+      return;
+    }
+    try {
+      const bitmap = await createImageBitmap(f);
+      const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, "image/jpeg", 0.86));
+      if (!blob) throw new Error("no blob");
+      setPhoto(new File([blob], f.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }));
+    } catch {
+      setError("couldn't read that image — try a different file");
+    }
+  }
   const [installer, setInstaller] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -187,7 +218,28 @@ export default function InvitePage() {
             a photo for your polaroid?{" "}
             <span style={{ fontSize: "0.75em", fontWeight: 600, opacity: 0.75 }}>— optional, square looks best</span>
           </label>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              acceptPhoto(e.dataTransfer.files?.[0] ?? null);
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              flexWrap: "wrap",
+              padding: "10px",
+              margin: "-10px",
+              outline: dragging ? `3px dashed ${ink}` : "none",
+              background: dragging ? "rgba(255,253,245,0.55)" : "transparent",
+            }}
+          >
             <label
               style={{
                 display: "inline-block",
@@ -203,21 +255,11 @@ export default function InvitePage() {
                 transform: "rotate(-0.4deg)",
               }}
             >
-              {photo ? "swap the photo" : "pick a photo 📷"}
+              {dragging ? "drop it! 📷" : photo ? "swap the photo" : "pick or drop a photo 📷"}
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/gif"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null;
-                  setError(null);
-                  if (f && f.size > 2 * 1024 * 1024) {
-                    setError("that photo is over 2MB — pick a smaller one");
-                    setPhoto(null);
-                    e.target.value = "";
-                    return;
-                  }
-                  setPhoto(f);
-                }}
+                onChange={(e) => acceptPhoto(e.target.files?.[0] ?? null)}
                 style={{ display: "none" }}
               />
             </label>

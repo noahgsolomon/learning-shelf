@@ -14,7 +14,7 @@ import {
   setAvatar,
 } from "@/lib/store";
 
-const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
+const MAX_PHOTO_BYTES = 50 * 1024 * 1024;
 
 export async function POST(request: Request): Promise<Response> {
   let form: FormData;
@@ -51,7 +51,7 @@ export async function POST(request: Request): Promise<Response> {
       return json(400, { error: "photo must be png, jpeg, webp, or gif" });
     }
     if (photo.size > MAX_PHOTO_BYTES) {
-      return json(413, { error: "photo exceeds 2MB — pick a smaller one" });
+      return json(413, { error: "photo exceeds 50MB — pick a smaller one" });
     }
   }
 

@@ -239,8 +239,10 @@ curl -sS -X POST "${SHELF_URL}/api/avatar" \\
   -F "image=@/absolute/path/to/photo.jpg"
 \`\`\`
 
-- Square-ish photos look best (it renders at 86×86); png/jpeg/webp/gif, max
-  2MB — downscale bigger images before uploading.
+- Square-ish photos look best (it renders at 86×86); png/jpeg/webp/gif. Keep
+  the upload under ~4MB — the host rejects bigger request bodies — so
+  downscale big phone photos before uploading (e.g. \`sips -Z 1200 photo.jpg\`
+  on macOS).
 - Re-uploading replaces the old photo. It shows at \`${SHELF_URL}/a/${author}\`.
 - Never upload a photo ${name} didn't explicitly choose, and never set another
   author's photo.
