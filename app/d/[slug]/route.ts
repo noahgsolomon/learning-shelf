@@ -26,6 +26,12 @@ export async function GET(
     });
   }
 
+  // Docs that ship no favicon inherit the shelf's, so their tabs still read
+  // as ours. A doc that declares any icon link keeps its own.
+  if (!/<link[^>]+rel=["'][^"']*icon[^"']*["']/i.test(html)) {
+    html = injectFavicon(html);
+  }
+
   const tint = new URL(request.url).searchParams.get("curtain");
   if (tint && /^#[0-9a-fA-F]{3,8}$/.test(tint)) {
     html = injectReveal(html, tint);
@@ -39,6 +45,20 @@ export async function GET(
       "cache-control": "no-store",
     },
   });
+}
+
+// The shelf's own icons (mirroring app/layout.tsx), slotted into the doc's
+// <head> — or ahead of the document if it somehow has none.
+function injectFavicon(html: string): string {
+  const links =
+    `<link rel="icon" href="/favicon.ico" sizes="16x16 32x32">` +
+    `<link rel="icon" href="/favicon.png" type="image/png" sizes="32x32">`;
+  const headTag = html.match(/<head[^>]*>/i);
+  if (headTag && headTag.index !== undefined) {
+    const at = headTag.index + headTag[0].length;
+    return html.slice(0, at) + links + html.slice(at);
+  }
+  return links + html;
 }
 
 // The reveal half of the pixel curtain: a script placed immediately after the
