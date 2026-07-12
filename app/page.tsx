@@ -217,8 +217,9 @@ export default async function ShelfPage() {
                 got the password? grab your kit ✂
               </span>
             </a>
-            {/* desktop only: opens Claude Code or Codex with the prompt typed */}
-            <LetsLearn />
+            {/* members only (needs the kit's skills installed) + desktop
+                only: opens Claude Code or Codex with the prompt typed */}
+            {viewer && <LetsLearn />}
             {/* rotating awards — celebratory, no scores to grind */}
             <Superlatives awards={awards} collective={collective} />
           </div>
