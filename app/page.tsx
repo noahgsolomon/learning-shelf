@@ -8,11 +8,12 @@ import type { CSSProperties, ReactNode } from "react";
 import { cookies } from "next/headers";
 import { getAuthorRecord, listAvatarAuthors, listDocs, listJoinedAuthors, type DocMeta } from "@/lib/store";
 import { OWNER_COOKIE } from "@/lib/owner";
-import { AuthorPanel, type AuthorGroup } from "@/lib/sections";
+import type { AuthorGroup } from "@/lib/sections";
 import { TOKENS_BY_ID } from "@/lib/styleTokens";
 import { LetsLearn } from "./LetsLearn";
 import { OwnerControls } from "./OwnerControls";
 import { InterestsTag, Polaroid } from "./BoardBits";
+import { PagedPanel } from "./PagedPanel";
 import { PixelCurtain } from "./PixelCurtain";
 
 export const dynamic = "force-dynamic";
@@ -218,7 +219,7 @@ export default async function ShelfPage() {
                   : undefined
               }
             >
-              <AuthorPanel group={group} />
+              <PagedPanel group={group} />
               {viewer === group.author.toLowerCase() && (
                 <OwnerControls
                   author={group.author.toLowerCase()}

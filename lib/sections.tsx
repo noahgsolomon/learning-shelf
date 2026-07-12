@@ -15,6 +15,9 @@ export type AuthorGroup = {
   author: string;
   authorStyle: string;
   docs: DocMeta[];
+  // Set when the docs array is one PAGE of a larger corner, so headers that
+  // show a count can show the real total.
+  total?: number;
 };
 
 export function AuthorPanel({ group }: { group: AuthorGroup }) {
@@ -163,7 +166,7 @@ function CobaltGridPanel({ group }: { group: AuthorGroup }) {
           {group.author}
         </h2>
         <span style={{ fontFamily: mono, fontSize: "11px", letterSpacing: "0.1em", color: ink, textTransform: "uppercase" }}>
-          index · {String(group.docs.length).padStart(2, "0")}
+          index · {String(group.total ?? group.docs.length).padStart(2, "0")}
         </span>
       </div>
 
@@ -221,9 +224,6 @@ function BlockFramePanel({ group }: { group: AuthorGroup }) {
       style={{ background: offwhite, border: `4px solid ${black}`, boxShadow: `8px 8px 0 ${black}`, padding: "30px clamp(24px, 4vw, 44px) 36px" }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap", marginBottom: "24px" }}>
-        <span style={{ display: "inline-block", background: fills[0], border: `3px solid ${black}`, boxShadow: `4px 4px 0 ${black}`, padding: "4px 12px", fontFamily: body, fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-          Contributor
-        </span>
         <h2 style={{ margin: 0, fontFamily: display, fontWeight: 700, fontSize: "clamp(32px,4vw,48px)", lineHeight: 0.9, letterSpacing: "-0.02em", color: black, textTransform: "uppercase" }}>
           {group.author}
         </h2>
