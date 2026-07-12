@@ -5,7 +5,7 @@
 // panel styles stop being a clash and become the point: it's a pinboard.
 
 import type { CSSProperties, ReactNode } from "react";
-import { listDocs, type DocMeta } from "@/lib/store";
+import { listAvatarAuthors, listDocs, type DocMeta } from "@/lib/store";
 import { AuthorPanel, type AuthorGroup } from "@/lib/sections";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +33,7 @@ const pinFills = [
 ];
 
 export default async function ShelfPage() {
-  const docs = await listDocs();
+  const [docs, avatarAuthors] = await Promise.all([listDocs(), listAvatarAuthors()]);
   const groups = groupByAuthor(docs);
 
   return (
@@ -154,7 +154,15 @@ export default async function ShelfPage() {
             panels' max-content width and overflows the sheet on narrow screens */}
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: "56px", paddingBottom: "24px" }}>
           {groups.map((group, i) => (
-            <PinnedPage key={group.author} index={i}>
+            <PinnedPage
+              key={group.author}
+              index={i}
+              avatar={
+                avatarAuthors.has(group.author.toLowerCase())
+                  ? { src: `/a/${group.author.toLowerCase()}`, name: group.author }
+                  : undefined
+              }
+            >
               <AuthorPanel group={group} />
             </PinnedPage>
           ))}
@@ -194,9 +202,11 @@ export default async function ShelfPage() {
 // contributes the paper/tape/pin; the contributor keeps their design inside.
 function PinnedPage({
   index,
+  avatar,
   children,
 }: {
   index: number;
+  avatar?: { src: string; name: string };
   children: ReactNode;
 }) {
   return (
@@ -206,6 +216,8 @@ function PinnedPage({
         transform: `rotate(${panelRotations[index % panelRotations.length]})`,
       }}
     >
+      {/* the author's polaroid, overlapping the paper's top-right corner */}
+      {avatar && <Polaroid src={avatar.src} name={avatar.name} index={index} />}
       {/* masking tape across the top */}
       <div
         aria-hidden
@@ -354,6 +366,65 @@ function GithubStarSticky() {
         <path d="M12 2.5l2.7 5.7 6.2.8-4.5 4.3 1.1 6.1L12 16.6l-5.5 2.9 1.1-6.1L3.1 9l6.2-.8L12 2.5z" />
       </svg>
     </a>
+  );
+}
+
+// An author's photo as a small polaroid print: white border, deep chin at the
+// bottom carrying a handwritten name, hung over the top-right corner of their
+// paper with a bit of tape. Optional — only authors who upload one get it.
+function Polaroid({ src, name, index }: { src: string; name: string; index: number }) {
+  const lean = index % 2 === 0 ? "4deg" : "-3.5deg";
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: "absolute",
+        top: "-26px",
+        right: "clamp(10px, 4vw, 42px)",
+        transform: `rotate(${lean})`,
+        background: "#FDFDFB",
+        padding: "7px 7px 6px",
+        boxShadow: "0 2px 4px rgba(45,42,38,0.28), 4px 8px 18px rgba(45,42,38,0.32)",
+        zIndex: 6,
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element -- runtime-uploaded
+          blob with no known dimensions; next/image needs both */}
+      <img
+        src={src}
+        alt=""
+        width={86}
+        height={86}
+        style={{ display: "block", width: "86px", height: "86px", objectFit: "cover", filter: "saturate(0.92) contrast(1.02)" }}
+      />
+      <div
+        style={{
+          fontFamily: script,
+          fontWeight: 600,
+          fontSize: "17px",
+          color: "#4A4139",
+          textAlign: "center",
+          padding: "3px 0 1px",
+        }}
+      >
+        {name.toLowerCase()}
+      </div>
+      {/* tape holding the polaroid to the paper */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-9px",
+          left: "50%",
+          transform: "translateX(-50%) rotate(-3deg)",
+          width: "52px",
+          height: "17px",
+          background:
+            "repeating-linear-gradient(90deg, rgba(255,255,255,0.5) 0 5px, rgba(255,255,255,0.36) 5px 10px)",
+          border: "1px solid rgba(255,255,255,0.35)",
+          boxShadow: "0 1px 2px rgba(45,42,38,0.16)",
+        }}
+      />
+    </div>
   );
 }
 

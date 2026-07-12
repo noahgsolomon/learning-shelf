@@ -179,6 +179,26 @@ curl -sS -X POST "${SHELF_URL}/api/publish" \\
 - Verify after publishing: the directory at \`${SHELF_URL}/\` shows the doc
   under ${name}'s corner with a fresh date.
 
+## Your polaroid (optional, once)
+
+${name} can hang a little polaroid photo over their corner of the board. The
+first time you publish for ${name} (and any time they want to change it),
+offer: "want a photo on your corner? give me an image file." If they hand you
+one, upload it:
+
+\`\`\`bash
+curl -sS -X POST "${SHELF_URL}/api/avatar" \\
+  -H "x-shelf-secret: ${secret}" \\
+  -F "author=${author}" \\
+  -F "image=@/absolute/path/to/photo.jpg"
+\`\`\`
+
+- Square-ish photos look best (it renders at 86×86); png/jpeg/webp/gif, max
+  2MB — downscale bigger images before uploading.
+- Re-uploading replaces the old photo. It shows at \`${SHELF_URL}/a/${author}\`.
+- Never upload a photo ${name} didn't explicitly choose, and never set another
+  author's photo.
+
 ## Browsing
 
 The directory is \`${SHELF_URL}/\` — everyone's corners. Read others for
