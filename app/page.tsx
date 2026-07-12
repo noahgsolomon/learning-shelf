@@ -300,48 +300,43 @@ function PinnedPage({
       {avatar && <Polaroid src={avatar.src} name={avatar.name} since={avatar.since} index={index} />}
       {/* what they're into — a living line their agent rewrites per publish */}
       {interests && author && <InterestsTag author={author} interests={interests} index={index} />}
-      {/* the board owner's paper wears a scrap of tape saying so —
-          zero-setup: first corner claimed runs the board */}
-      {isOwner && (
-        <div
-          aria-label={`${author} runs this board`}
-          style={{
-            position: "absolute",
-            top: "-15px",
-            left: "58%",
-            transform: "rotate(1.8deg)",
-            zIndex: 6,
-            background:
-              "repeating-linear-gradient(90deg, rgba(255,255,255,0.55) 0 6px, rgba(255,255,255,0.42) 6px 12px)",
-            border: "1px solid rgba(255,255,255,0.4)",
-            boxShadow: "0 1px 3px rgba(45,42,38,0.25)",
-            padding: "4px 14px 5px",
-            fontFamily: "'Permanent Marker', cursive",
-            fontSize: "13px",
-            color: "#3B2F21",
-            whiteSpace: "nowrap",
-          }}
-        >
-          runs this board
-        </div>
-      )}
-      {/* masking tape across the top */}
+      {/* masking tape across the top — on the board owner's paper, someone
+          has written on it in sharpie (zero-setup: first corner claimed
+          runs the board) */}
       <div
-        aria-hidden
+        aria-label={isOwner ? `${author} runs this board` : undefined}
+        aria-hidden={!isOwner}
         style={{
           position: "absolute",
           top: "-13px",
           left: "50%",
           transform: `translateX(-50%) rotate(${index % 2 === 0 ? "-2deg" : "2.5deg"})`,
-          width: "120px",
+          width: isOwner ? "158px" : "120px",
           height: "30px",
           background:
             "repeating-linear-gradient(90deg, rgba(255,255,255,0.42) 0 6px, rgba(255,255,255,0.30) 6px 12px)",
           border: "1px solid rgba(255,255,255,0.32)",
           boxShadow: "0 1px 2px rgba(45,42,38,0.18)",
           zIndex: 5,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
-      />
+      >
+        {isOwner && (
+          <span
+            style={{
+              fontFamily: "'Permanent Marker', cursive",
+              fontSize: "12.5px",
+              color: "#3B2F21",
+              whiteSpace: "nowrap",
+              transform: "rotate(-0.5deg)",
+            }}
+          >
+            runs this board
+          </span>
+        )}
+      </div>
 
       {/* the paper sheet: warm cream margin (not white), a faint top highlight,
           a fractal-noise grain overlay, and a layered shadow that reads as
