@@ -153,9 +153,9 @@ export default async function ShelfPage() {
               <AuthorPanel group={group} />
             </PinnedPage>
           ))}
-          {/* an always-present empty spot so the board reads as "room for more"
-              rather than finished — and the only CTA when it's brand new */}
-          <EmptyCorner index={groups.length} lonely={groups.length === 0} />
+          {/* only when the board is genuinely empty — otherwise the header's
+              invite sticky is the CTA and this would be redundant */}
+          {groups.length === 0 && <EmptyCorner index={0} lonely />}
         </div>
 
         <footer
