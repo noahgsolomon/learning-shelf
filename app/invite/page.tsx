@@ -18,6 +18,7 @@ export default function InvitePage() {
   const [name, setName] = useState("");
   const [style, setStyle] = useState(STYLE_TOKENS[0].id);
   const [password, setPassword] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
   const [installer, setInstaller] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -28,11 +29,12 @@ export default function InvitePage() {
     setBusy(true);
     setCopied(false);
     setError(null);
-    const res = await fetch("/api/invite", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name, style, password }),
-    });
+    const form = new FormData();
+    form.set("name", name);
+    form.set("style", style);
+    form.set("password", password);
+    if (photo) form.set("photo", photo);
+    const res = await fetch("/api/invite", { method: "POST", body: form });
     const data = await res.json();
     if (!res.ok) {
       setError(data.error ?? "something went wrong");
@@ -180,6 +182,64 @@ export default function InvitePage() {
                 </button>
               );
             })}
+          </div>
+          <label style={{ display: "block", fontFamily: script, fontWeight: 700, fontSize: "24px", margin: "18px 0 10px" }}>
+            a photo for your polaroid?{" "}
+            <span style={{ fontSize: "0.75em", fontWeight: 600, opacity: 0.75 }}>— optional, square looks best</span>
+          </label>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            <label
+              style={{
+                display: "inline-block",
+                fontFamily: slab,
+                fontWeight: 600,
+                fontSize: "15px",
+                padding: "9px 16px",
+                background: "#FFFDF5",
+                color: ink,
+                border: `2px solid ${ink}`,
+                boxShadow: "2px 2px 0 rgba(45,42,38,0.5)",
+                cursor: "pointer",
+                transform: "rotate(-0.4deg)",
+              }}
+            >
+              {photo ? "swap the photo" : "pick a photo 📷"}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  setError(null);
+                  if (f && f.size > 2 * 1024 * 1024) {
+                    setError("that photo is over 2MB — pick a smaller one");
+                    setPhoto(null);
+                    e.target.value = "";
+                    return;
+                  }
+                  setPhoto(f);
+                }}
+                style={{ display: "none" }}
+              />
+            </label>
+            {photo && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontFamily: script, fontWeight: 600, fontSize: "20px" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={URL.createObjectURL(photo)}
+                  alt=""
+                  style={{ width: "44px", height: "44px", objectFit: "cover", border: "3px solid #FFFDF5", boxShadow: "1px 2px 6px rgba(45,42,38,0.35)", transform: "rotate(2deg)" }}
+                />
+                {photo.name}
+                <button
+                  type="button"
+                  onClick={() => setPhoto(null)}
+                  aria-label="remove photo"
+                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: script, fontWeight: 700, fontSize: "20px", color: ink, padding: 0 }}
+                >
+                  ✕
+                </button>
+              </span>
+            )}
           </div>
           <button
             onClick={mint}
