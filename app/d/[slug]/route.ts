@@ -43,23 +43,31 @@ export async function GET(
 
 // The reveal half of the pixel curtain: a script placed immediately after the
 // <body> tag builds the full-opacity tile cover synchronously (so the cover
-// paints before any content — no flash), then on DOMContentLoaded pops the
-// tiles away as a downward wavefront with noise, mirroring the board's cover
-// sweep. Cleans the ?curtain param from the URL afterwards. The tint is
-// validated hex upstream, so interpolating it here is safe.
+// paints before any content — no flash), then on DOMContentLoaded fades the
+// tiles out as a downward wavefront — the EXACT per-tile recipe of the
+// board's cover (curtains pixels, direction 90, noise 0.4, duration 0.5):
+// each tile fades opacity over 0.5s with cubic-bezier(.76,0,.24,1), delayed
+// by 0.4s × (0.6 × row fraction + 0.4 × random). Cleans the ?curtain param
+// from the URL afterwards. The tint is validated hex upstream, so
+// interpolating it here is safe.
 function injectReveal(html: string, tint: string): string {
   const script = `<script>(function(){
-var CELL=100,SWEEP=380,NOISE=190;
+var CELL=100,SPREAD=400,DUR=500,NOISE=0.4,EASE="cubic-bezier(0.76,0,0.24,1)";
 var c=document.createElement("div");
 c.setAttribute("aria-hidden","");
 var cols=Math.ceil(innerWidth/CELL),rows=Math.ceil(innerHeight/CELL);
 c.style.cssText="position:fixed;inset:0;z-index:2147483647;pointer-events:none;display:grid;grid-template-columns:repeat("+cols+",1fr);grid-template-rows:repeat("+rows+",1fr);";
-var tiles=[];
-for(var r=0;r<rows;r++)for(var i=0;i<cols;i++){var t=document.createElement("div");t.style.cssText="background:${tint};margin:-0.5px;";c.appendChild(t);tiles.push([t,(r/Math.max(1,rows-1))*SWEEP+Math.random()*NOISE]);}
+for(var r=0;r<rows;r++)for(var i=0;i<cols;i++){
+  var f=(r/Math.max(1,rows-1))*(1-NOISE)+Math.random()*NOISE;
+  var t=document.createElement("div");
+  t.style.cssText="background:${tint};margin:-0.5px;opacity:1;transition:opacity "+DUR+"ms "+EASE+" "+Math.round(SPREAD*f)+"ms;";
+  c.appendChild(t);
+}
 document.body.appendChild(c);
 function reveal(){
-  for(var j=0;j<tiles.length;j++)(function(t,d){setTimeout(function(){t.style.opacity="0";},d);})(tiles[j][0],tiles[j][1]);
-  setTimeout(function(){c.remove();},SWEEP+NOISE+80);
+  void c.offsetWidth;
+  for(var j=0;j<c.children.length;j++)c.children[j].style.opacity="0";
+  setTimeout(function(){c.remove();},SPREAD+DUR+80);
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",reveal);else reveal();
 try{var u=new URL(location.href);u.searchParams.delete("curtain");history.replaceState(null,"",u.pathname+u.search+u.hash);}catch(e){}
