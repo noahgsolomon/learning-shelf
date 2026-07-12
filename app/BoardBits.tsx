@@ -23,7 +23,7 @@ const STICKY_FILLS = [
   "#D0BFFF",
 ];
 
-const MORPH = { type: "spring", bounce: 0.18, visualDuration: 0.32 } as const;
+const MORPH = { type: "spring", bounce: 0.12, visualDuration: 0.18 } as const;
 
 // Full-screen dimmed backdrop that fades while the shared element morphs.
 function Backdrop({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
@@ -113,10 +113,8 @@ export function Polaroid({ src, name, since, index }: { src: string; name: strin
                 alt={name}
                 style={{ display: "block", width: "100%", aspectRatio: "1 / 1", objectFit: "cover", filter: "saturate(0.92) contrast(1.02)" }}
               />
-              {/* the sharpie chin — modal-only info fades in after the morph */}
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0, transition: { delay: 0.16, duration: 0.25 } }}
+              {/* the sharpie chin */}
+              <div
                 style={{
                   fontFamily: sharpie,
                   color: "#33302B",
@@ -131,7 +129,7 @@ export function Polaroid({ src, name, since, index }: { src: string; name: strin
                     on the shelf since {since}
                   </div>
                 )}
-              </motion.div>
+              </div>
             </motion.div>
           </Backdrop>
         )}
@@ -246,12 +244,7 @@ function DepthReport({ doc, fill }: { doc: DocMeta; fill: string }) {
         {doc.subject.toLowerCase()}
       </div>
 
-      {/* the ladder — every zone, with "you are here" scrawled at the level.
-          all of this is modal-only info, so it fades in after the morph */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0, transition: { delay: 0.16, duration: 0.25 } }}
-      >
+      {/* the ladder — every zone, with "you are here" scrawled at the level */}
       <div style={{ display: "grid", gap: "6px", margin: "18px 0 0" }}>
         {DEPTH_LEVELS.map((l, i) => {
           const reached = i <= now;
@@ -308,7 +301,6 @@ function DepthReport({ doc, fill }: { doc: DocMeta; fill: string }) {
           ({wordsToNext.toLocaleString()} words to {next.label} {next.emoji})
         </div>
       )}
-      </motion.div>
     </div>
   );
 }

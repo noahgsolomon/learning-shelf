@@ -12,6 +12,7 @@ import { AuthorPanel, type AuthorGroup } from "@/lib/sections";
 import { LetsLearn } from "./LetsLearn";
 import { OwnerControls } from "./OwnerControls";
 import { Polaroid } from "./BoardBits";
+import { PixelCurtain } from "./PixelCurtain";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,8 @@ export default async function ShelfPage() {
     >
       {/* corner doodles, scribbled on the board */}
       <Doodles />
+      {/* pixel wipe when entering someone's note */}
+      <PixelCurtain />
 
       <div style={{ maxWidth: "1020px", margin: "0 auto", position: "relative" }}>
         <header style={{ padding: "60px 0 40px", position: "relative" }}>
