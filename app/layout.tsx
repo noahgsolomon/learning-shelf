@@ -4,6 +4,12 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = {
   title: "Learning Shelf",
   description: "A shared directory of living learning docs.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "16x16 32x32" },
+      { url: "/favicon.png", type: "image/png", sizes: "32x32" },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

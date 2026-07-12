@@ -25,6 +25,12 @@ export function PixelCurtain() {
 
     function onClick(e: MouseEvent) {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      // No curtain on phones: iOS Safari can't paint fixed overlays over the
+      // URL-bar/home-indicator regions, so the "total" wipe shows naked
+      // strips — and covering the screen before a full-page nav just adds
+      // latency there. Plain navigation; no ?curtain param means the doc
+      // side skips its reveal too.
+      if (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768) return;
       const target = e.target as HTMLElement;
       // this runs in the capture phase, before the depth tag's own handler —
       // leave clicks on interactive things inside the card (the tag) alone
