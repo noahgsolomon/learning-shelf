@@ -9,7 +9,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // Overscroll rubber-banding reveals the <html> element behind the body —
+    // paint it cork-brown so bouncing past the edge never flashes white.
+    <html lang="en" style={{ background: "#A9855B" }}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
