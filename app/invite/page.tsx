@@ -17,21 +17,29 @@ const noteShadow = "2px 3px 15px rgba(45,42,38,0.22), 0 1px 3px rgba(45,42,38,0.
 export default function InvitePage() {
   const [name, setName] = useState("");
   const [style, setStyle] = useState(STYLE_TOKENS[0].id);
+  const [password, setPassword] = useState("");
   const [installer, setInstaller] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function mint() {
-    if (!name.trim()) return;
+    if (!name.trim() || !password.trim()) return;
     setBusy(true);
     setCopied(false);
+    setError(null);
     const res = await fetch("/api/invite", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name, style }),
+      body: JSON.stringify({ name, style, password }),
     });
     const data = await res.json();
-    setInstaller(data.installer ?? null);
+    if (!res.ok) {
+      setError(data.error ?? "something went wrong");
+      setInstaller(null);
+    } else {
+      setInstaller(data.installer ?? null);
+    }
     setBusy(false);
   }
 
@@ -106,6 +114,27 @@ export default function InvitePage() {
               outline: "none",
             }}
           />
+          <label style={{ display: "block", fontFamily: script, fontWeight: 700, fontSize: "24px", margin: "18px 0 8px" }}>
+            the shelf password
+          </label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && mint()}
+            placeholder="ask a friend if you don't have it"
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              fontFamily: slab,
+              fontSize: "18px",
+              padding: "10px 14px",
+              border: `2px solid ${ink}`,
+              background: "#FFFDF5",
+              color: ink,
+              outline: "none",
+            }}
+          />
           <label style={{ display: "block", fontFamily: script, fontWeight: 700, fontSize: "24px", margin: "18px 0 10px" }}>
             their corner&apos;s design? — tap one
           </label>
@@ -154,7 +183,7 @@ export default function InvitePage() {
           </div>
           <button
             onClick={mint}
-            disabled={busy || !name.trim()}
+            disabled={busy || !name.trim() || !password.trim()}
             style={{
               marginTop: "20px",
               fontFamily: display,
@@ -164,13 +193,18 @@ export default function InvitePage() {
               color: ink,
               border: `2px solid ${ink}`,
               boxShadow: "3px 3px 0 rgba(45,42,38,0.5)",
-              cursor: busy || !name.trim() ? "not-allowed" : "pointer",
-              opacity: busy || !name.trim() ? 0.6 : 1,
+              cursor: busy || !name.trim() || !password.trim() ? "not-allowed" : "pointer",
+              opacity: busy || !name.trim() || !password.trim() ? 0.6 : 1,
               transform: "rotate(0.5deg)",
             }}
           >
             {busy ? "minting…" : "mint the invite ✂"}
           </button>
+          {error && (
+            <p style={{ margin: "14px 0 0", fontFamily: slab, fontWeight: 600, fontSize: "15px", color: "#C2342B" }}>
+              {error}
+            </p>
+          )}
         </div>
 
         {installer && (
