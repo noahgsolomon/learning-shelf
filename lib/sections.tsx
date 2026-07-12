@@ -8,7 +8,6 @@
 // (doc title · template · updated).
 
 import type { DocMeta } from "./store";
-import { DEPTH_LEVELS, depthIndex, projectedDepthIndex } from "./readtime";
 import { TOKENS_BY_ID, type StyleToken } from "./styleTokens";
 
 export type AuthorGroup = {
@@ -105,69 +104,23 @@ function ProgressBar({
   font: string;
   onDark?: boolean;
 }) {
-  const hasModules = Boolean(doc.modulesTotal && doc.modulesTotal > 0);
-  const hasDepth = doc.wordCount > 0;
-  if (!hasModules && !hasDepth) return null;
-  const pct = hasModules
-    ? Math.max(0, Math.min(100, Math.round((doc.modulesDone / doc.modulesTotal) * 100)))
-    : 0;
+  if (!doc.modulesTotal || doc.modulesTotal <= 0) return null;
+  const pct = Math.max(0, Math.min(100, Math.round((doc.modulesDone / doc.modulesTotal) * 100)));
   const trackBg = onDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
   return (
     // minWidth 0 at every level: the nowrap label must ellipsize instead of
     // widening the card's min-content past its grid track (content would
     // otherwise paint outside the card in every panel style)
     <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: "5px", marginTop: "2px", minWidth: 0 }}>
-      {hasModules && (
-        <>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", minWidth: 0, fontFamily: font, fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: ink, opacity: 0.85 }}>
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
-              {doc.currentModule ? `on: ${doc.currentModule}` : "progress"}
-            </span>
-            <span style={{ whiteSpace: "nowrap" }}>{doc.modulesDone} / {doc.modulesTotal}</span>
-          </div>
-          <div style={{ height: "8px", border: `1.5px solid ${ink}`, background: trackBg, position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", inset: "0 auto 0 0", width: `${pct}%`, background: accent }} />
-          </div>
-        </>
-      )}
-      {hasDepth && <DepthMeter doc={doc} ink={ink} font={font} />}
-    </div>
-  );
-}
-
-// The dive meter: how deep the learner has gone so far, judged by the prose
-// that actually exists. Reached levels are lit, the current one is big, and
-// when module progress projects the finished doc into a deeper zone, a
-// "headed for" hint says where the dive is going.
-function DepthMeter({ doc, ink, font }: { doc: DocMeta; ink: string; font: string }) {
-  const now = depthIndex(doc.wordCount);
-  const headed = projectedDepthIndex(doc.wordCount, doc.modulesDone, doc.modulesTotal);
-  return (
-    <div
-      title={`${doc.wordCount.toLocaleString()} words written so far`}
-      style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0, flexWrap: "wrap", marginTop: "2px" }}
-    >
-      <span style={{ display: "inline-flex", alignItems: "center", gap: "3px" }} aria-hidden>
-        {DEPTH_LEVELS.map((l, i) => (
-          <span
-            key={l.label}
-            style={{
-              fontSize: i === now ? "17px" : "12px",
-              opacity: i <= now ? 1 : 0.28,
-              filter: i <= now ? "none" : "grayscale(1)",
-              lineHeight: 1,
-            }}
-          >
-            {l.emoji}
-          </span>
-        ))}
-      </span>
-      <span style={{ fontFamily: font, fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: ink, opacity: 0.85, whiteSpace: "nowrap" }}>
-        {DEPTH_LEVELS[now].label}
-        {headed > now && (
-          <span style={{ opacity: 0.65 }}> → headed for {DEPTH_LEVELS[headed].label} {DEPTH_LEVELS[headed].emoji}</span>
-        )}
-      </span>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", minWidth: 0, fontFamily: font, fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: ink, opacity: 0.85 }}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
+          {doc.currentModule ? `on: ${doc.currentModule}` : "progress"}
+        </span>
+        <span style={{ whiteSpace: "nowrap" }}>{doc.modulesDone} / {doc.modulesTotal}</span>
+      </div>
+      <div style={{ height: "8px", border: `1.5px solid ${ink}`, background: trackBg, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: "0 auto 0 0", width: `${pct}%`, background: accent }} />
+      </div>
     </div>
   );
 }

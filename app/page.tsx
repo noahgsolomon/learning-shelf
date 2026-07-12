@@ -7,6 +7,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { cookies } from "next/headers";
 import { listAvatarAuthors, listDocs, listJoinedAuthors, type DocMeta } from "@/lib/store";
+import { DEPTH_LEVELS, depthIndex, projectedDepthIndex } from "@/lib/readtime";
 import { OWNER_COOKIE } from "@/lib/owner";
 import { AuthorPanel, type AuthorGroup } from "@/lib/sections";
 import { LetsLearn } from "./LetsLearn";
@@ -180,6 +181,7 @@ export default async function ShelfPage() {
             <PinnedPage
               key={group.author}
               index={i}
+              docs={group.docs}
               avatar={
                 avatarAuthors.has(group.author.toLowerCase())
                   ? { src: `/a/${group.author.toLowerCase()}`, name: group.author }
@@ -232,10 +234,12 @@ export default async function ShelfPage() {
 function PinnedPage({
   index,
   avatar,
+  docs = [],
   children,
 }: {
   index: number;
   avatar?: { src: string; name: string };
+  docs?: DocMeta[];
   children: ReactNode;
 }) {
   return (
@@ -247,6 +251,9 @@ function PinnedPage({
     >
       {/* the author's polaroid, overlapping the paper's top-right corner */}
       {avatar && <Polaroid src={avatar.src} index={index} />}
+      {/* the board's commentary on how deep each dive goes, stuck to the
+          bottom edge like a friend's annotation */}
+      <DepthStickies docs={docs} index={index} />
       {/* masking tape across the top */}
       <div
         aria-hidden
@@ -395,6 +402,102 @@ function GithubStarSticky() {
         <path d="M12 2.5l2.7 5.7 6.2.8-4.5 4.3 1.1 6.1L12 16.6l-5.5 2.9 1.1-6.1L3.1 9l6.2-.8L12 2.5z" />
       </svg>
     </a>
+  );
+}
+
+// The board's commentary on each dive: one small sticky per doc, stuck along
+// the paper's bottom edge (the same trick as the polaroid — board chrome, not
+// the author's design). Emoji spectrum with the current level big, a Caveat
+// verdict, and "→ 🦑 next" when module progress projects a deeper finish.
+const DEPTH_STICKY_FILLS = [
+  "linear-gradient(135deg, #FFE066 0%, #FFD43B 100%)",
+  "linear-gradient(135deg, #A5D8FF 0%, #74C0FC 100%)",
+  "linear-gradient(135deg, #FFC9C9 0%, #FF9F9F 100%)",
+  "#D0BFFF",
+];
+
+function DepthStickies({ docs, index }: { docs: DocMeta[]; index: number }) {
+  const dived = docs.filter((d) => d.wordCount > 0).slice(0, 3);
+  if (dived.length === 0) return null;
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: "absolute",
+        bottom: "-16px",
+        left: "clamp(14px, 5vw, 52px)",
+        right: "clamp(14px, 5vw, 52px)",
+        display: "flex",
+        justifyContent: "flex-start",
+        gap: "14px",
+        flexWrap: "wrap",
+        zIndex: 6,
+        pointerEvents: "none",
+      }}
+    >
+      {dived.map((doc, d) => {
+        const now = depthIndex(doc.wordCount);
+        const headed = projectedDepthIndex(doc.wordCount, doc.modulesDone, doc.modulesTotal);
+        return (
+          <div
+            key={doc.slug}
+            title={`${doc.subject}: ${doc.wordCount.toLocaleString()} words written so far`}
+            style={{
+              position: "relative",
+              background: DEPTH_STICKY_FILLS[(index + d) % DEPTH_STICKY_FILLS.length],
+              padding: "8px 14px 9px",
+              boxShadow: noteShadow,
+              transform: `rotate(${(index + d) % 2 === 0 ? "-2deg" : "2.2deg"})`,
+              pointerEvents: "auto",
+            }}
+          >
+            <span
+              style={{
+                position: "absolute",
+                top: "-7px",
+                left: "14px",
+                width: "12px",
+                height: "12px",
+                borderRadius: "50%",
+                background: pinFills[(index + d) % pinFills.length],
+                boxShadow: "0 2px 4px rgba(45,42,38,0.45), inset -1px -1px 3px rgba(0,0,0,0.2)",
+              }}
+            />
+            <span style={{ display: "block", lineHeight: 1, whiteSpace: "nowrap" }}>
+              {DEPTH_LEVELS.map((l, i) => (
+                <span
+                  key={l.label}
+                  style={{
+                    fontSize: i === now ? "16px" : "11px",
+                    opacity: i <= now ? 1 : 0.3,
+                    filter: i <= now ? "none" : "grayscale(1)",
+                    marginRight: "2px",
+                  }}
+                >
+                  {l.emoji}
+                </span>
+              ))}
+            </span>
+            <span
+              style={{
+                display: "block",
+                marginTop: "3px",
+                fontFamily: script,
+                fontWeight: 700,
+                fontSize: "16px",
+                lineHeight: 1.1,
+                color: ink,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {dived.length > 1 ? `${doc.subject.toLowerCase()}: ` : ""}
+              {DEPTH_LEVELS[now].label}
+              {headed > now ? ` → ${DEPTH_LEVELS[headed].emoji} soon` : "!"}
+            </span>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
