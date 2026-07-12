@@ -170,11 +170,31 @@ either value inside an HTML doc, never commit them to a public repo.
 3. **Teach, don't take notes.** Use the learn skill's philosophy: motivate each
    idea before explaining it, prefer diagrams and worked examples, explain
    jargon plainly. The doc should teach a stranger, not remind an expert.
-4. **Keep the local source file** in ${name}'s home or project directory. The
+4. **Make it interactive wherever interaction teaches better than prose.**
+   The doc is a web page, not a PDF — use that. Docs are self-contained HTML
+   with inline JS, so every module should ask: "what here would land harder
+   if the reader could poke it?" Reach for things like:
+   - **sliders / knobs** on any parameterized idea (change the interest rate,
+     the learning rate, the glaze temperature — watch the outcome move);
+   - **step-through diagrams** — a Next/Prev button that walks one state
+     change at a time instead of one giant static figure;
+   - **self-check reveals** — the learn skill's understanding-check questions
+     as click-to-reveal cards, so the reader answers before peeking;
+   - **live toggles/comparisons** — flip between the wrong way and the right
+     way, before/after, naive vs. optimized;
+   - **tiny sandboxes** where the topic allows (an editable input whose
+     output recomputes live).
+   Interactivity must serve the concept — a widget per module where it makes
+   sense, not confetti everywhere. Static prose is fine for genuinely static
+   ideas. All interactive bits must be styled inside the chosen template's
+   design system (its colors, its fonts, its component grammar) and work
+   offline in the single file — no external libraries.
+5. **Keep the local source file** in ${name}'s home or project directory. The
    shelf hosts a copy; the local file is what you edit.
-5. **Republish on EVERY meaningful update** — the shelf always shows the latest.
-6. **Read and iterate against the HOSTED copy** at \`${SHELF_URL}/d/<slug>\`,
-   so ${name} sees exactly what everyone else sees.
+6. **Republish on EVERY meaningful update** — the shelf always shows the latest.
+7. **Read and iterate against the HOSTED copy** at \`${SHELF_URL}/d/<slug>\`,
+   so ${name} sees exactly what everyone else sees — and click through your
+   interactive bits there to confirm they work as hosted.
 
 ## Publishing (and republishing — same command)
 
@@ -403,6 +423,13 @@ the doc gains one module section at a time, and each time you finish a module
 and re-publish, you bump \`modulesDone\` and set \`currentModule\` to the next
 one. The progress bar on their card is that ratio. Never inflate it — the bar
 should reflect what is actually written and understood, not what is planned.
+
+When writing a module into the doc, plan its INTERACTIVE moment along with
+its prose: the doc is a live web page, so if the module's core idea has a
+parameter, a sequence, or a comparison in it, build it as something the
+reader can drive (slider, step-through, toggle, click-to-reveal check) rather
+than only describing it. One well-aimed interactive element per module is the
+default; skip it only when the idea is genuinely static.
 
 ## When the User Asks for a Quick Answer
 
