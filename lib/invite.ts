@@ -7,7 +7,9 @@
 
 import { STYLE_TOKENS } from "./styleTokens";
 
-const SHELF_URL = "https://noah-learning-shelf.vercel.app";
+// Self-hosted shelves set SHELF_URL so their minted kits point at their own
+// deployment; unset, this is noah's original shelf.
+const SHELF_URL = process.env.SHELF_URL ?? "https://noah-learning-shelf.vercel.app";
 
 export function buildInviteInstaller(rawName: string, style: string): string {
   const name = rawName.trim().replace(/[^a-zA-Z0-9 '-]/g, "").slice(0, 40) || "Friend";
