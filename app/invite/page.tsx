@@ -1,9 +1,9 @@
 "use client";
 
-// The invite desk: a sticky-note form on the cork board. Type a friend's
-// name, pick their corner's design, and mint a paste-into-Claude installer
-// that carries all three skills. Send it to them; they paste it into the
-// Claude Code desktop app and their Claude sets everything up.
+// The join desk: a newcomer (who a friend gave the password to) lands here,
+// enters their own name + the password + picks a corner design, and gets a
+// paste-into-Claude installer carrying all three skills. They paste it into
+// the Claude Code desktop app and their Claude sets everything up.
 
 import { useState } from "react";
 import { STYLE_TOKENS } from "@/lib/styleTokens";
@@ -55,7 +55,7 @@ export default function InvitePage() {
     const blob = new Blob([installer], { type: "text/markdown" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `shelf-invite-${name.trim().toLowerCase().split(/\s+/)[0] || "friend"}.md`;
+    a.download = `shelf-kit-${name.trim().toLowerCase().split(/\s+/)[0] || "friend"}.md`;
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -79,7 +79,7 @@ export default function InvitePage() {
             transform: "rotate(-1deg)",
           }}
         >
-          invite a friend
+          claim your corner
         </h1>
 
         {/* the form, on a green sticky */}
@@ -95,13 +95,13 @@ export default function InvitePage() {
         >
           <span aria-hidden style={{ position: "absolute", top: "-8px", left: "50%", transform: "translateX(-50%)", width: "16px", height: "16px", borderRadius: "50%", background: "radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a)", boxShadow: "0 2px 4px rgba(45,42,38,0.5), inset -2px -2px 4px rgba(0,0,0,0.2)" }} />
           <label style={{ display: "block", fontFamily: script, fontWeight: 700, fontSize: "24px", marginBottom: "8px" }}>
-            who&apos;s joining?
+            what&apos;s your name?
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && mint()}
-            placeholder="their first name"
+            placeholder="your first name"
             style={{
               width: "100%",
               boxSizing: "border-box",
@@ -122,7 +122,7 @@ export default function InvitePage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && mint()}
-            placeholder="ask a friend if you don't have it"
+            placeholder="the one a friend gave you"
             style={{
               width: "100%",
               boxSizing: "border-box",
@@ -136,7 +136,7 @@ export default function InvitePage() {
             }}
           />
           <label style={{ display: "block", fontFamily: script, fontWeight: 700, fontSize: "24px", margin: "18px 0 10px" }}>
-            their corner&apos;s design? — tap one
+            your corner&apos;s design? — tap one
           </label>
           <div
             style={{
@@ -198,7 +198,7 @@ export default function InvitePage() {
               transform: "rotate(0.5deg)",
             }}
           >
-            {busy ? "minting…" : "mint the invite ✂"}
+            {busy ? "making your kit…" : "make my kit ✂"}
           </button>
           {error && (
             <p style={{ margin: "14px 0 0", fontFamily: slab, fontWeight: 600, fontSize: "15px", color: "#C2342B" }}>
@@ -220,13 +220,12 @@ export default function InvitePage() {
             }}
           >
             <p style={{ margin: 0, fontFamily: script, fontWeight: 700, fontSize: "24px" }}>
-              done! send this to {name.trim().split(/\s+/)[0]} ✉
+              done, {name.trim().split(/\s+/)[0]}! here&apos;s your kit ✉
             </p>
             <p style={{ margin: "8px 0 14px", fontFamily: slab, fontSize: "15.5px", lineHeight: 1.55 }}>
-              They paste the whole thing into their Claude Code app. Their
-              Claude installs the three skills (the shelf, how we like to
-              learn, and the template library), then helps them start their
-              first doc.
+              Paste the whole thing into your Claude Code desktop app. Your
+              Claude installs the three skills (the shelf, how we like to learn,
+              and the template library), then helps you start your first doc.
             </p>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "14px" }}>
               <button onClick={copy} style={btnStyle("#A5D8FF")}>{copied ? "copied ✓" : "copy it"}</button>

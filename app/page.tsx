@@ -110,10 +110,10 @@ export default async function ShelfPage() {
             >
               <Pin fill={pinFills[3]} />
               <span style={{ display: "block", fontFamily: display, fontSize: "20px", lineHeight: 1.1 }}>
-                invite a friend
+                join the shelf
               </span>
               <span style={{ display: "block", marginTop: "4px", fontFamily: script, fontWeight: 600, fontSize: "18px" }}>
-                mint them a starter kit ✂
+                got the password? grab your kit ✂
               </span>
             </a>
           </div>
@@ -173,7 +173,7 @@ export default async function ShelfPage() {
           }}
         >
           <span style={{ transform: "rotate(-0.8deg)" }}>
-            want a corner? ask your claude — it has the shelf skill ✎
+            new here? tap “join the shelf” and grab your kit ✎
           </span>
           <span style={{ transform: "rotate(0.6deg)" }}>docs are living — they change as we learn ★</span>
         </footer>
@@ -315,8 +315,8 @@ function EmptyCorner({ index, lonely }: { index: number; lonely: boolean }) {
         </p>
         <p style={{ margin: 0, fontFamily: script, fontWeight: 600, fontSize: "22px", color: "#3B2F21", maxWidth: "34ch" }}>
           {lonely
-            ? "be the first to pin what you're learning — or invite the crew."
-            : "room for another corner — invite a friend to claim it."}
+            ? "be the first to claim a corner and pin what you're learning."
+            : "room for another corner — grab a kit and claim it."}
         </p>
         <a
           href="/invite"
@@ -332,7 +332,7 @@ function EmptyCorner({ index, lonely }: { index: number; lonely: boolean }) {
             transform: "rotate(-1deg)",
           }}
         >
-          invite a friend ✂
+          join the shelf ✂
         </a>
       </div>
       <Pin fill="radial-gradient(circle at 30% 30%, #ffd43b, #f59f00)" style={{ left: "28px", top: "-9px", transform: "none", zIndex: 6 }} />
