@@ -10,7 +10,8 @@ export type DocMeta = {
   slug: string;
   title: string;
   author: string;
-  template: string;
+  template: string; // the template the DOC itself uses (per doc)
+  authorStyle: string; // the design language of the author's directory band
   updatedAt: string; // ISO
 };
 
@@ -79,6 +80,11 @@ export async function listDocs(): Promise<DocMeta[]> {
     } catch {
       metas = [];
     }
+  }
+
+  // Tolerate docs published before authorStyle existed.
+  for (const m of metas) {
+    if (!m.authorStyle) m.authorStyle = "plain";
   }
 
   return metas.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));

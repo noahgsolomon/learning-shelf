@@ -34,6 +34,10 @@ export async function POST(request: Request): Promise<Response> {
   const title = String(form.get("title") ?? "").slice(0, 120);
   const author = String(form.get("author") ?? "").slice(0, 60);
   const template = String(form.get("template") ?? "").slice(0, 60);
+  // The author's directory-band aesthetic — baked into each person's skill so
+  // every one of their docs lands in their own visual section. Falls back to a
+  // neutral band if omitted or unknown.
+  const authorStyle = String(form.get("authorStyle") ?? "plain").slice(0, 60);
 
   const htmlField = form.get("html");
   const html =
@@ -52,7 +56,10 @@ export async function POST(request: Request): Promise<Response> {
     return json(413, { error: "html exceeds 5MB" });
   }
 
-  const meta = await publishDoc({ slug, title, author, template }, html);
+  const meta = await publishDoc(
+    { slug, title, author, template, authorStyle },
+    html,
+  );
 
   return json(200, { ok: true, url: `/d/${slug}`, meta });
 }
