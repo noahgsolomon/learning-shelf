@@ -1,13 +1,18 @@
 "use client";
 
 // The pixel curtain for entering someone's note: clicking a doc card sweeps
-// a wavefront of chunky squares down the screen, then navigates while the
-// viewport is covered. Real Motion+ curtains (vendored in lib/curtains —
-// see VENDORED.md), pixels effect: size 100, direction 90 (down), noise 0.4.
+// a wavefront of chunky squares down the screen — tinted with THAT author's
+// dominant color (their style token's accent, read from the paper's
+// data-curtain-tint) — then navigates with ?curtain=<tint> so the doc page
+// plays the matching pixel REVEAL on arrival. Real Motion+ curtains
+// (vendored in lib/curtains — see VENDORED.md): size 100, direction 90
+// (down), noise 0.4.
 
 import { useEffect } from "react";
 import { curtains } from "@/lib/curtains";
 import { pixels } from "@/lib/curtains/effects";
+
+const FALLBACK_TINT = "#FFD43B";
 
 export function PixelCurtain() {
   useEffect(() => {
@@ -21,13 +26,21 @@ export function PixelCurtain() {
       if (!(anchor instanceof HTMLAnchorElement)) return;
       e.preventDefault();
 
+      const tint =
+        anchor.closest("[data-curtain-tint]")?.getAttribute("data-curtain-tint") ||
+        FALLBACK_TINT;
+      document.documentElement.style.setProperty("--curtain", tint);
+
+      const dest = new URL(anchor.href);
+      dest.searchParams.set("curtain", tint);
+
       curtains(
         // full-document navigation: never resolve — the browser swaps
-        // documents while the cover is up, and the overlay leaves with
-        // this page. (The reveal phase belongs to the next document.)
+        // documents while the cover is up. The reveal half plays on the
+        // destination, driven by the ?curtain param.
         () =>
           new Promise<void>(() => {
-            window.location.href = anchor.href;
+            window.location.href = dest.toString();
           }),
         {
           effect: pixels({ size: 100, direction: 90, noise: 0.4 }),
@@ -40,10 +53,10 @@ export function PixelCurtain() {
     return () => document.removeEventListener("click", onClick, true);
   }, []);
 
-  // theme the curtain tiles: sticky-note yellow over everything on the board
+  // curtain tiles wear the clicked author's color (set above per click)
   return (
     <style>{`
-      .motion-curtain { background: #FFD43B; }
+      .motion-curtain { background: var(--curtain, ${FALLBACK_TINT}); }
       .motion-curtains { z-index: 200; }
     `}</style>
   );

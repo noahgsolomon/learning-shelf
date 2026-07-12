@@ -2,15 +2,20 @@
 // rather than a page on purpose: the docs are self-contained HTML files with
 // their own styles and scripts, and must reach the browser untouched — not
 // embedded inside someone else's React tree.
+//
+// One deliberate exception: arriving from the board with ?curtain=<hex>
+// (the pixel wipe that covered the board in that author's color) gets a
+// matching pixel REVEAL injected right after <body>, so the doc uncovers
+// tile by tile. Direct visits — no param — are served byte-identical.
 
 import { getDocHtml } from "@/lib/store";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ): Promise<Response> {
   const { slug } = await params;
-  const html = await getDocHtml(slug);
+  let html = await getDocHtml(slug);
 
   if (html === undefined) {
     // A styled miss: route handlers bypass app/not-found.tsx, so serve the
@@ -21,6 +26,11 @@ export async function GET(
     });
   }
 
+  const tint = new URL(request.url).searchParams.get("curtain");
+  if (tint && /^#[0-9a-fA-F]{3,8}$/.test(tint)) {
+    html = injectReveal(html, tint);
+  }
+
   return new Response(html, {
     status: 200,
     headers: {
@@ -29,6 +39,38 @@ export async function GET(
       "cache-control": "no-store",
     },
   });
+}
+
+// The reveal half of the pixel curtain: a script placed immediately after the
+// <body> tag builds the full-opacity tile cover synchronously (so the cover
+// paints before any content — no flash), then on DOMContentLoaded pops the
+// tiles away as a downward wavefront with noise, mirroring the board's cover
+// sweep. Cleans the ?curtain param from the URL afterwards. The tint is
+// validated hex upstream, so interpolating it here is safe.
+function injectReveal(html: string, tint: string): string {
+  const script = `<script>(function(){
+var CELL=100,SWEEP=380,NOISE=190;
+var c=document.createElement("div");
+c.setAttribute("aria-hidden","");
+var cols=Math.ceil(innerWidth/CELL),rows=Math.ceil(innerHeight/CELL);
+c.style.cssText="position:fixed;inset:0;z-index:2147483647;pointer-events:none;display:grid;grid-template-columns:repeat("+cols+",1fr);grid-template-rows:repeat("+rows+",1fr);";
+var tiles=[];
+for(var r=0;r<rows;r++)for(var i=0;i<cols;i++){var t=document.createElement("div");t.style.cssText="background:${tint};margin:-0.5px;";c.appendChild(t);tiles.push([t,(r/Math.max(1,rows-1))*SWEEP+Math.random()*NOISE]);}
+document.body.appendChild(c);
+function reveal(){
+  for(var j=0;j<tiles.length;j++)(function(t,d){setTimeout(function(){t.style.opacity="0";},d);})(tiles[j][0],tiles[j][1]);
+  setTimeout(function(){c.remove();},SWEEP+NOISE+80);
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",reveal);else reveal();
+try{var u=new URL(location.href);u.searchParams.delete("curtain");history.replaceState(null,"",u.pathname+u.search+u.hash);}catch(e){}
+})();</script>`;
+
+  const bodyTag = html.match(/<body[^>]*>/i);
+  if (bodyTag && bodyTag.index !== undefined) {
+    const at = bodyTag.index + bodyTag[0].length;
+    return html.slice(0, at) + script + html.slice(at);
+  }
+  return script + html;
 }
 
 const NOT_FOUND_HTML = `<!doctype html>

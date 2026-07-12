@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { getAuthorRecord, listAvatarAuthors, listDocs, listJoinedAuthors, type DocMeta } from "@/lib/store";
 import { OWNER_COOKIE } from "@/lib/owner";
 import { AuthorPanel, type AuthorGroup } from "@/lib/sections";
+import { TOKENS_BY_ID } from "@/lib/styleTokens";
 import { LetsLearn } from "./LetsLearn";
 import { OwnerControls } from "./OwnerControls";
 import { Polaroid } from "./BoardBits";
@@ -199,6 +200,7 @@ export default async function ShelfPage() {
             <PinnedPage
               key={group.author}
               index={i}
+              tint={TOKENS_BY_ID[group.authorStyle]?.accent}
               avatar={
                 avatarAuthors.has(group.author.toLowerCase())
                   ? {
@@ -255,14 +257,18 @@ export default async function ShelfPage() {
 function PinnedPage({
   index,
   avatar,
+  tint,
   children,
 }: {
   index: number;
   avatar?: { src: string; name: string; since?: string };
+  tint?: string;
   children: ReactNode;
 }) {
   return (
     <div
+      // the author's dominant color — the pixel curtain reads this on click
+      data-curtain-tint={tint}
       style={{
         position: "relative",
         transform: `rotate(${panelRotations[index % panelRotations.length]})`,
