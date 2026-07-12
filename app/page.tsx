@@ -147,9 +147,9 @@ export default async function ShelfPage() {
         ) : (
           <div style={{ display: "grid", gap: "56px", paddingBottom: "24px" }}>
             {groups.map((group, i) => (
-              <PinnedPanel key={group.author} index={i}>
+              <PinnedPage key={group.author} index={i} label={`${group.author.toLowerCase()}.html`}>
                 <AuthorPanel group={group} />
-              </PinnedPanel>
+              </PinnedPage>
             ))}
           </div>
         )}
@@ -178,35 +178,98 @@ export default async function ShelfPage() {
   );
 }
 
-// A contributor panel, hand-pinned to the board: masking tape across the top,
-// a colored thumbtack, and a small alternating rotation.
-function PinnedPanel({ index, children }: { index: number; children: ReactNode }) {
+// A contributor panel presented as a PAGE STUCK TO THE BOARD: the styled panel
+// is printed onto a cream paper sheet (a margin all around), the sheet lifts
+// off the cork with a layered shadow, a peeled dog-ear sits at the corner, and
+// masking tape + a thumbtack hold it up. This is the fusion — the corkboard
+// contributes the paper/tape/pin; the contributor keeps their design inside.
+function PinnedPage({
+  index,
+  label,
+  children,
+}: {
+  index: number;
+  label: string;
+  children: ReactNode;
+}) {
+  const sheet = "#FBF8EF";
   return (
     <div
       style={{
         position: "relative",
         transform: `rotate(${panelRotations[index % panelRotations.length]})`,
-        filter: "drop-shadow(4px 8px 14px rgba(45,42,38,0.35))",
       }}
     >
-      {/* masking tape */}
+      {/* masking tape across the top */}
       <div
         aria-hidden
         style={{
           position: "absolute",
-          top: "-14px",
+          top: "-13px",
           left: "50%",
           transform: `translateX(-50%) rotate(${index % 2 === 0 ? "-2deg" : "2.5deg"})`,
-          width: "110px",
-          height: "28px",
-          background: "rgba(255,255,255,0.45)",
-          border: "1px solid rgba(255,255,255,0.35)",
-          zIndex: 3,
+          width: "120px",
+          height: "30px",
+          background:
+            "repeating-linear-gradient(90deg, rgba(255,255,255,0.42) 0 6px, rgba(255,255,255,0.30) 6px 12px)",
+          border: "1px solid rgba(255,255,255,0.32)",
+          boxShadow: "0 1px 2px rgba(45,42,38,0.18)",
+          zIndex: 5,
         }}
       />
-      {/* a tack in the corner, color rotating per panel */}
-      <Pin fill={pinFills[index % pinFills.length]} style={{ left: "26px", top: "-8px", transform: "none" }} />
-      {children}
+
+      {/* the paper sheet: cream margin, a soft top highlight, and a layered
+          shadow that reads as paper lifted off cork */}
+      <div
+        style={{
+          position: "relative",
+          background: `linear-gradient(180deg, #FFFDF7 0%, ${sheet} 22%)`,
+          padding: "clamp(14px, 1.6vw, 22px)",
+          boxShadow:
+            "0 1px 1px rgba(45,42,38,0.18), 5px 10px 18px rgba(45,42,38,0.30), 14px 22px 34px rgba(45,42,38,0.18)",
+          borderRadius: "2px",
+        }}
+      >
+        {/* handwritten filename in the paper margin */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "clamp(3px, 0.5vw, 6px)",
+            right: "clamp(16px, 2vw, 26px)",
+            fontFamily: "'Caveat', cursive",
+            fontWeight: 600,
+            fontSize: "17px",
+            color: "rgba(45,42,38,0.5)",
+            zIndex: 2,
+          }}
+        >
+          {label}
+        </div>
+
+        {children}
+
+        {/* peeled dog-ear at the bottom-right corner */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            right: 0,
+            bottom: 0,
+            width: "34px",
+            height: "34px",
+            background: `linear-gradient(135deg, transparent 0 50%, ${sheet} 50% 100%)`,
+            boxShadow: "-3px -3px 6px rgba(45,42,38,0.22)",
+            borderTop: "1px solid rgba(45,42,38,0.10)",
+            borderLeft: "1px solid rgba(45,42,38,0.10)",
+          }}
+        />
+      </div>
+
+      {/* a tack pinning the sheet, color rotating per page */}
+      <Pin
+        fill={pinFills[index % pinFills.length]}
+        style={{ left: "28px", top: "-9px", transform: "none", zIndex: 6 }}
+      />
     </div>
   );
 }
