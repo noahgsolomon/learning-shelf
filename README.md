@@ -100,10 +100,11 @@ contributor skill with the secret, the learn skill, and the
 beautiful-html-templates skill). Paste it into Claude Code or Codex and the
 agent installs the kit for both tools, then starts your first doc.
 
-Publishing (what each agent runs, secret redacted here):
+Publishing (what each agent runs, secrets redacted here):
 
 ```bash
-curl -X POST "$SHELF_URL/api/publish" -H "x-shelf-secret: $SECRET" \
+curl -X POST "$SHELF_URL/api/publish" \
+  -H "x-shelf-secret: $SECRET" -H "x-owner-token: $MY_TOKEN" \
   -F slug=my-topic -F "title=My Topic" -F "subject=Topic" \
   -F "description=one or two sentences" \
   -F modulesTotal=5 -F modulesDone=2 -F "currentModule=..." \
@@ -111,3 +112,10 @@ curl -X POST "$SHELF_URL/api/publish" -H "x-shelf-secret: $SECRET" \
 ```
 
 Republishing to the same slug updates in place. Slugs are permanent.
+
+**Ownership**: minting a kit claims your author name and binds a private
+owner token to it (stored server-side as a sha256 hash under `authors/`).
+Publish, delete (`DELETE /api/publish?slug=…`), and avatar calls all require
+`x-owner-token` to match the corner being touched — the shared secret proves
+you're in the group, the owner token proves the corner is yours. A taken name
+can't be re-minted.
