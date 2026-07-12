@@ -7,6 +7,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { listDocs, type DocMeta } from "@/lib/store";
 import { AuthorPanel, type AuthorGroup } from "@/lib/sections";
+import { Sticky } from "@/lib/Sticky";
 
 export const dynamic = "force-dynamic";
 
@@ -81,44 +82,33 @@ export default async function ShelfPage() {
           </p>
 
           {/* a short yellow sticky + the invite sticky, side by side */}
-          <div style={{ display: "flex", gap: "22px", flexWrap: "wrap", alignItems: "flex-start", marginTop: "26px" }}>
-            <div
-              style={{
-                position: "relative",
-                maxWidth: "400px",
-                background: "linear-gradient(135deg, #FFE066 0%, #FFD43B 100%)",
-                padding: "20px 24px 16px",
-                boxShadow: noteShadow,
-                transform: "rotate(-1.4deg)",
-              }}
+          <div style={{ display: "flex", gap: "26px", flexWrap: "wrap", alignItems: "flex-start", marginTop: "26px" }}>
+            <Sticky
+              background="linear-gradient(135deg, #FFE066 0%, #FFD43B 100%)"
+              rotate="-1.4deg"
+              pinFill={pinFills[0]}
+              padding="22px 30px 26px 26px"
+              wrapStyle={{ maxWidth: "400px" }}
             >
-              <Pin fill={pinFills[0]} />
               <p style={{ margin: 0, fontFamily: slab, fontSize: "17px", lineHeight: 1.5 }}>
                 our little group of friends, pinning up whatever we&apos;re
                 learning. our claudes keep the notes.
               </p>
-            </div>
-            <a
+            </Sticky>
+            <Sticky
               href="/invite"
-              style={{
-                position: "relative",
-                display: "inline-block",
-                background: "linear-gradient(135deg, #FFC9C9 0%, #FFA8A8 100%)",
-                padding: "18px 24px 16px",
-                boxShadow: noteShadow,
-                transform: "rotate(1.6deg)",
-                textDecoration: "none",
-                color: ink,
-              }}
+              background="linear-gradient(135deg, #FFC9C9 0%, #FFA8A8 100%)"
+              rotate="1.6deg"
+              pinFill={pinFills[3]}
+              padding="20px 34px 26px 26px"
             >
-              <Pin fill={pinFills[3]} />
               <span style={{ display: "block", fontFamily: display, fontSize: "20px", lineHeight: 1.1 }}>
                 join the shelf
               </span>
               <span style={{ display: "block", marginTop: "4px", fontFamily: script, fontWeight: 600, fontSize: "18px" }}>
                 got the password? grab your kit ✂
               </span>
-            </a>
+            </Sticky>
           </div>
 
           {groups.length > 0 && (

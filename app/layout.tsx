@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { StickyClipDef } from "@/lib/Sticky";
 
 export const metadata: Metadata = {
   title: "Learning Shelf",
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           backgroundAttachment: "fixed",
         }}
       >
+        <StickyClipDef />
         {children}
       </body>
     </html>
