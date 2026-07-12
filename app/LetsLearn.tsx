@@ -4,9 +4,11 @@
 // app opens with "I want to learn about <topic>" already typed. Deep links:
 // claude://code/new?q=…  (Claude Code session — where the shelf skills live)
 // codex://threads/new?prompt=…  (Codex app, chatbox prefilled, not auto-run)
-// Desktop-only: phones don't have the apps, so the note never renders there.
+// Desktop-only: phones don't have the apps, so the note is hidden there —
+// via CSS (not a hydration-time JS check) so it paints with the rest of the
+// board instead of popping in a beat late.
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const ink = "#2D2A26";
 const display = "'Shrikhand', cursive";
@@ -15,15 +17,7 @@ const slab = "'Zilla Slab', serif";
 const noteShadow = "2px 3px 15px rgba(45,42,38,0.22), 0 1px 3px rgba(45,42,38,0.28)";
 
 export function LetsLearn() {
-  const [desktop, setDesktop] = useState(false);
   const [topic, setTopic] = useState("");
-
-  useEffect(() => {
-    const fine = window.matchMedia("(pointer: fine)").matches;
-    setDesktop(fine && window.innerWidth >= 768);
-  }, []);
-
-  if (!desktop) return null;
 
   const prompt = `I want to learn about ${topic.trim() || "____"}`;
   const ready = topic.trim().length > 0;
@@ -39,6 +33,7 @@ export function LetsLearn() {
 
   return (
     <div
+      className="lets-learn"
       style={{
         position: "relative",
         display: "inline-block",
@@ -49,6 +44,8 @@ export function LetsLearn() {
         maxWidth: "360px",
       }}
     >
+      {/* !important: the note's inline display would otherwise win */}
+      <style>{`@media (max-width: 767px), (pointer: coarse) { .lets-learn { display: none !important; } }`}</style>
       {/* blue tack to match the note */}
       <span
         aria-hidden
