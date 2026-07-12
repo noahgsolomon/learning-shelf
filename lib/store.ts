@@ -138,6 +138,9 @@ type AuthorRecord = {
   name?: string;
   style?: string;
   joinedAt?: string;
+  // A living one-liner of what this member is into — rewritten by their
+  // agent on every publish, shown on the board via the interests sticky.
+  interests?: string;
 };
 
 export async function getAuthorRecord(
@@ -204,6 +207,16 @@ export async function deleteAvatar(author: string): Promise<void> {
   for (const e of Object.values(AVATAR_EXTS)) {
     await unlink(join(AVATAR_DIR, `${author}.${e}`)).catch(() => {});
   }
+}
+
+// Rewrite the member's living interests line (agent-sent on publish).
+export async function saveAuthorInterests(
+  author: string,
+  interests: string,
+): Promise<void> {
+  const record = await getAuthorRecord(author);
+  if (!record) return;
+  await writeAuthorRecord(author, { ...record, interests });
 }
 
 // Merge join-time profile fields into the author's record.

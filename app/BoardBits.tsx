@@ -304,3 +304,82 @@ function DepthReport({ doc, fill }: { doc: DocMeta; fill: string }) {
     </div>
   );
 }
+
+// ── Interests ─────────────────────────────────────────────────────────────
+// A small sticky at the paper's top-left — the polaroid's counterpart — that
+// morphs into the member's "what I'm into" note. The text is a living line
+// their agent rewrites on every publish, so it tracks them over time.
+
+export function InterestsTag({
+  author,
+  interests,
+  index,
+}: {
+  author: string;
+  interests: string;
+  index: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const id = `interests-${author}`;
+  const lean = index % 2 === 0 ? "-2.5deg" : "2deg";
+
+  return (
+    <>
+      <motion.button
+        layoutId={id}
+        transition={MORPH}
+        onClick={() => setOpen(true)}
+        aria-label={`what ${author} is into`}
+        style={{
+          position: "absolute",
+          top: "-14px",
+          left: "clamp(10px, 4vw, 42px)",
+          zIndex: 6,
+          rotate: lean,
+          background: "linear-gradient(135deg, #B2F2BB 0%, #8CE99A 100%)",
+          border: "none",
+          padding: "7px 14px 8px",
+          boxShadow: "1px 2px 8px rgba(45,42,38,0.32)",
+          fontFamily: script,
+          fontWeight: 700,
+          fontSize: "17px",
+          lineHeight: 1,
+          color: ink,
+          cursor: "zoom-in",
+        }}
+      >
+        interests ✎
+      </motion.button>
+
+      <AnimatePresence>
+        {open && (
+          <Backdrop onClose={() => setOpen(false)}>
+            <motion.div
+              layoutId={id}
+              transition={MORPH}
+              onClick={() => setOpen(false)}
+              style={{
+                width: "min(88vw, 420px)",
+                background: "linear-gradient(135deg, #B2F2BB 0%, #8CE99A 100%)",
+                padding: "26px 30px 30px",
+                boxShadow: "0 6px 16px rgba(20,16,12,0.45), 0 24px 60px rgba(20,16,12,0.4)",
+                rotate: "-0.8deg",
+                cursor: "zoom-out",
+              }}
+            >
+              <div style={{ fontFamily: sharpie, fontSize: "23px", lineHeight: 1.15, color: "#1E3A24", transform: "rotate(-1.2deg)" }}>
+                what {author}&apos;s into
+              </div>
+              <div style={{ marginTop: "14px", fontFamily: script, fontWeight: 600, fontSize: "25px", lineHeight: 1.3, color: ink }}>
+                {interests}
+              </div>
+              <div style={{ marginTop: "16px", fontFamily: slab, fontSize: "12.5px", opacity: 0.65, color: ink }}>
+                rewritten by {author}&apos;s agent with every note they pin
+              </div>
+            </motion.div>
+          </Backdrop>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

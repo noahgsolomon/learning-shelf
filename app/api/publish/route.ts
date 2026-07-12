@@ -9,7 +9,7 @@
 //     -F author=noah -F template=sakura-chroma \
 //     -F html=@softshell-log.html
 
-import { deleteDoc, getDocMeta, publishDoc } from "@/lib/store";
+import { deleteDoc, getDocMeta, publishDoc, saveAuthorInterests } from "@/lib/store";
 import { ownerTokenFrom, parseOwnerCookie, verifyOwner } from "@/lib/owner";
 import { measureRead } from "@/lib/readtime";
 
@@ -86,6 +86,13 @@ export async function POST(request: Request): Promise<Response> {
     return json(403, {
       error: `slug "${slug}" belongs to ${existing.author} — pick a different slug`,
     });
+  }
+
+  // The member's living interests line rides along with every publish —
+  // a rewrite, not an append, so it always reflects them now.
+  const interests = String(form.get("interests") ?? "").trim().slice(0, 280);
+  if (interests) {
+    await saveAuthorInterests(author.toLowerCase(), interests);
   }
 
   const meta = await publishDoc(

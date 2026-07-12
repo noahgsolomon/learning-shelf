@@ -226,12 +226,21 @@ curl -sS -X POST "${SHELF_URL}/api/publish" \\
   -F "author=${author}" \\
   -F "authorStyle=${bandStyle}" \\
   -F "template=<the template slug you chose for THIS doc>" \\
+  -F "interests=<${name}'s living interests line — see below>" \\
   -F "html=@/absolute/path/to/your-doc.html"
 \`\`\`
 
 - \`slug\` is permanent — pick once; republishing to the same slug updates in place.
 - \`subject\` and \`description\` are what the directory card shows; keep the
   description fresh as the doc evolves.
+- **\`interests\`** is ${name}'s living "what I'm into" line, shown on the
+  board behind the interests sticky on their paper. Send it with EVERY
+  publish, freshly rewritten (never appended): one warm sentence, max ~280
+  chars, that reads like a friend describing ${name} — woven from ALL the
+  topics on their corner plus this doc, most-recent leanings first. Example:
+  "deep in tattoo linework lately — also the person who rebuilt Next.js from
+  scratch for fun." Write it yourself from what you know; don't ask ${name}
+  unless they want to dictate it.
 - **Progress fields** power the little progress bar on ${name}'s card. A topic
   is broken into modules (see the learn skill); \`modulesTotal\` is the planned
   count, \`modulesDone\` is how many are actually written into the doc, and

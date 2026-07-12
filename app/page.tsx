@@ -12,7 +12,7 @@ import { AuthorPanel, type AuthorGroup } from "@/lib/sections";
 import { TOKENS_BY_ID } from "@/lib/styleTokens";
 import { LetsLearn } from "./LetsLearn";
 import { OwnerControls } from "./OwnerControls";
-import { Polaroid } from "./BoardBits";
+import { InterestsTag, Polaroid } from "./BoardBits";
 import { PixelCurtain } from "./PixelCurtain";
 
 export const dynamic = "force-dynamic";
@@ -52,12 +52,16 @@ export default async function ShelfPage() {
     ? cookieValue.slice(0, cookieValue.indexOf("."))
     : null;
   const groups = groupByAuthor(docs);
-  // When their corner was claimed — shown on the enlarged polaroid's chin.
+  // Per-author record data: claim date (polaroid chin) + the living
+  // interests line (interests sticky).
   const joinedSince = new Map<string, string>();
+  const interestsByAuthor = new Map<string, string>();
   await Promise.all(
-    [...avatarAuthors].map(async (a) => {
+    groups.map(async (g) => {
+      const a = g.author.toLowerCase();
       const record = await getAuthorRecord(a);
-      if (record?.createdAt) {
+      if (!record) return;
+      if (record.createdAt) {
         joinedSince.set(
           a,
           new Date(record.createdAt)
@@ -65,6 +69,7 @@ export default async function ShelfPage() {
             .toLowerCase(),
         );
       }
+      if (record.interests) interestsByAuthor.set(a, record.interests);
     }),
   );
   // Members who announced themselves but haven't published yet get an empty
@@ -200,7 +205,9 @@ export default async function ShelfPage() {
             <PinnedPage
               key={group.author}
               index={i}
+              author={group.author.toLowerCase()}
               tint={TOKENS_BY_ID[group.authorStyle]?.accent}
+              interests={interestsByAuthor.get(group.author.toLowerCase())}
               avatar={
                 avatarAuthors.has(group.author.toLowerCase())
                   ? {
@@ -258,11 +265,15 @@ function PinnedPage({
   index,
   avatar,
   tint,
+  interests,
+  author,
   children,
 }: {
   index: number;
   avatar?: { src: string; name: string; since?: string };
   tint?: string;
+  interests?: string;
+  author?: string;
   children: ReactNode;
 }) {
   return (
@@ -276,6 +287,8 @@ function PinnedPage({
     >
       {/* the author's polaroid, overlapping the paper's top-right corner */}
       {avatar && <Polaroid src={avatar.src} name={avatar.name} since={avatar.since} index={index} />}
+      {/* what they're into — a living line their agent rewrites per publish */}
+      {interests && author && <InterestsTag author={author} interests={interests} index={index} />}
       {/* masking tape across the top */}
       <div
         aria-hidden
