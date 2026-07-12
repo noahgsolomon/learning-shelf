@@ -25,15 +25,16 @@ echo "SHELF_SECRET=<secret>" > .env.local
 npm run dev            # http://localhost:4321
 ```
 
-## Deploy (Vercel)
+## Deploy
 
-1. `vercel` in this directory (creates/links the project).
-2. Dashboard → Storage → create a **Blob** store → connect it to the project
-   (this injects `BLOB_READ_WRITE_TOKEN`).
-3. `vercel env add SHELF_SECRET production` → paste the secret from the skill.
-4. `vercel --prod`.
-5. Update the **Shelf URL** line in every copy of the contributor skill
-   (`~/.claude/skills/learning-shelf/SKILL.md`) to the production URL.
+Already wired: pushing to `master` on github.com/noahgsolomon/learning-shelf
+auto-deploys via the Vercel Git integration. Production alias:
+https://noah-learning-shelf.vercel.app
+
+One-time setup that is already done (recorded for posterity): Blob store
+`shelf-docs` connected to the project (provides `BLOB_READ_WRITE_TOKEN`),
+`SHELF_SECRET` set in production, deployment protection disabled so the
+directory and publish API are public.
 
 ## Contributors
 
