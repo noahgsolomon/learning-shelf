@@ -57,12 +57,14 @@ export default async function ShelfPage() {
   // interests line (interests sticky).
   const joinedSince = new Map<string, string>();
   const interestsByAuthor = new Map<string, string>();
+  const claimedAt = new Map<string, string>();
   await Promise.all(
     groups.map(async (g) => {
       const a = g.author.toLowerCase();
       const record = await getAuthorRecord(a);
       if (!record) return;
       if (record.createdAt) {
+        claimedAt.set(a, record.createdAt);
         joinedSince.set(
           a,
           new Date(record.createdAt)
@@ -73,6 +75,11 @@ export default async function ShelfPage() {
       if (record.interests) interestsByAuthor.set(a, record.interests);
     }),
   );
+  // Zero-setup board ownership: the earliest corner claimed IS the owner —
+  // whoever deployed the shelf claimed theirs before sharing the password.
+  const boardOwner = [...claimedAt.entries()].sort((x, y) =>
+    x[1].localeCompare(y[1]),
+  )[0]?.[0];
   // Members who announced themselves but haven't published yet get an empty
   // corner at the end of the board, already wearing their chosen design.
   for (const member of joined) {
@@ -207,6 +214,7 @@ export default async function ShelfPage() {
               key={group.author}
               index={i}
               author={group.author.toLowerCase()}
+              isOwner={group.author.toLowerCase() === boardOwner}
               tint={TOKENS_BY_ID[group.authorStyle]?.accent}
               interests={interestsByAuthor.get(group.author.toLowerCase())}
               avatar={
@@ -268,6 +276,7 @@ function PinnedPage({
   tint,
   interests,
   author,
+  isOwner,
   children,
 }: {
   index: number;
@@ -275,6 +284,7 @@ function PinnedPage({
   tint?: string;
   interests?: string;
   author?: string;
+  isOwner?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -290,6 +300,31 @@ function PinnedPage({
       {avatar && <Polaroid src={avatar.src} name={avatar.name} since={avatar.since} index={index} />}
       {/* what they're into — a living line their agent rewrites per publish */}
       {interests && author && <InterestsTag author={author} interests={interests} index={index} />}
+      {/* the board owner's paper wears a scrap of tape saying so —
+          zero-setup: first corner claimed runs the board */}
+      {isOwner && (
+        <div
+          aria-label={`${author} runs this board`}
+          style={{
+            position: "absolute",
+            top: "-15px",
+            left: "58%",
+            transform: "rotate(1.8deg)",
+            zIndex: 6,
+            background:
+              "repeating-linear-gradient(90deg, rgba(255,255,255,0.55) 0 6px, rgba(255,255,255,0.42) 6px 12px)",
+            border: "1px solid rgba(255,255,255,0.4)",
+            boxShadow: "0 1px 3px rgba(45,42,38,0.25)",
+            padding: "4px 14px 5px",
+            fontFamily: "'Permanent Marker', cursive",
+            fontSize: "13px",
+            color: "#3B2F21",
+            whiteSpace: "nowrap",
+          }}
+        >
+          runs this board
+        </div>
+      )}
       {/* masking tape across the top */}
       <div
         aria-hidden

@@ -78,6 +78,10 @@ My shelf password is: ________
 8. Hand me the two links: the board URL, and <board URL>/invite to send to
    friends along with the password. Remind me the password and secret live
    only in Vercel env + .env.local, never in the repo.
+
+9. Tell me to claim my own corner FIRST (at <board URL>/invite), before
+   sharing the password: the first corner claimed on a board is marked as
+   the board owner — "runs this board" — with no configuration.
 ```
 
 ## Deploy (this instance)
