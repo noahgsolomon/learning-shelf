@@ -141,6 +141,9 @@ type AuthorRecord = {
   // A living one-liner of what this member is into — rewritten by their
   // agent on every publish, shown on the board via the interests sticky.
   interests?: string;
+  // UTC days (YYYY-MM-DD) on which this member published — appended by the
+  // publish route. Powers streaks and superlatives. Capped at 400 entries.
+  activeDays?: string[];
 };
 
 export async function getAuthorRecord(
@@ -217,6 +220,22 @@ export async function saveAuthorInterests(
   const record = await getAuthorRecord(author);
   if (!record) return;
   await writeAuthorRecord(author, { ...record, interests });
+}
+
+// Stamp today (UTC) onto the member's activity record — called on every
+// publish. Deduped, sorted, capped.
+export async function recordActivity(author: string): Promise<void> {
+  const record = await getAuthorRecord(author);
+  if (!record) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const days = new Set(record.activeDays ?? []);
+  if (days.has(today)) return;
+  days.add(today);
+  const sorted = [...days].sort();
+  await writeAuthorRecord(author, {
+    ...record,
+    activeDays: sorted.slice(-400),
+  });
 }
 
 // Merge join-time profile fields into the author's record.

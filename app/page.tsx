@@ -14,6 +14,8 @@ import { LetsLearn } from "./LetsLearn";
 import { OwnerControls } from "./OwnerControls";
 import { InterestsTag, Polaroid } from "./BoardBits";
 import { PagedPanel } from "./PagedPanel";
+import { Superlatives, type Award } from "./Superlatives";
+import { currentStreak } from "@/lib/streak";
 import { PixelCurtain } from "./PixelCurtain";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +60,7 @@ export default async function ShelfPage() {
   const joinedSince = new Map<string, string>();
   const interestsByAuthor = new Map<string, string>();
   const claimedAt = new Map<string, string>();
+  const streaks = new Map<string, number>();
   await Promise.all(
     groups.map(async (g) => {
       const a = g.author.toLowerCase();
@@ -73,6 +76,7 @@ export default async function ShelfPage() {
         );
       }
       if (record.interests) interestsByAuthor.set(a, record.interests);
+      if (record.activeDays) streaks.set(a, currentStreak(record.activeDays));
     }),
   );
   // Zero-setup board ownership: the earliest corner claimed IS the owner —
@@ -80,6 +84,46 @@ export default async function ShelfPage() {
   const boardOwner = [...claimedAt.entries()].sort((x, y) =>
     x[1].localeCompare(y[1]),
   )[0]?.[0];
+
+  // Board superlatives — celebratory, rotating, never a ranking.
+  const awards: Award[] = [];
+  const deepest = [...docs].sort((a, b) => b.wordCount - a.wordCount)[0];
+  if (deepest?.wordCount > 0) {
+    awards.push({
+      emoji: "🦑",
+      title: "deepest dive",
+      line: `${deepest.subject.toLowerCase()} — ${deepest.author.toLowerCase()}, ${Math.round(deepest.wordCount / 1000)}k words down`,
+    });
+  }
+  const freshest = [...docs].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+  if (freshest) {
+    const daysAgo = Math.floor((Date.now() - new Date(freshest.updatedAt).getTime()) / 86400000);
+    awards.push({
+      emoji: "✎",
+      title: "freshest ink",
+      line: `${freshest.author.toLowerCase()} — ${daysAgo === 0 ? "today" : daysAgo === 1 ? "yesterday" : `${daysAgo} days ago`}`,
+    });
+  }
+  const hotStreak = [...streaks.entries()].sort((x, y) => y[1] - x[1])[0];
+  if (hotStreak && hotStreak[1] >= 2) {
+    awards.push({
+      emoji: "🔥",
+      title: "longest streak",
+      line: `${hotStreak[0]} — ${hotStreak[1]} days straight`,
+    });
+  }
+  const counts = new Map<string, number>();
+  for (const d of docs) counts.set(d.author.toLowerCase(), (counts.get(d.author.toLowerCase()) ?? 0) + 1);
+  const prolific = [...counts.entries()].sort((x, y) => y[1] - x[1])[0];
+  if (prolific && prolific[1] > 1) {
+    awards.push({
+      emoji: "📌",
+      title: "most notes pinned",
+      line: `${prolific[0]} — ${prolific[1]} on the board`,
+    });
+  }
+  const totalWords = docs.reduce((s, d) => s + (d.wordCount || 0), 0);
+  const collective = `together: ${Math.round(totalWords / 1000)}k words across ${docs.length} dive${docs.length === 1 ? "" : "s"}, ${groups.length} corner${groups.length === 1 ? "" : "s"} ✎`;
   // Members who announced themselves but haven't published yet get an empty
   // corner at the end of the board, already wearing their chosen design.
   for (const member of joined) {
@@ -175,6 +219,8 @@ export default async function ShelfPage() {
             </a>
             {/* desktop only: opens Claude Code or Codex with the prompt typed */}
             <LetsLearn />
+            {/* rotating awards — celebratory, no scores to grind */}
+            <Superlatives awards={awards} collective={collective} />
           </div>
 
           {groups.length > 0 && (
@@ -215,6 +261,7 @@ export default async function ShelfPage() {
               index={i}
               author={group.author.toLowerCase()}
               isOwner={group.author.toLowerCase() === boardOwner}
+              streak={streaks.get(group.author.toLowerCase()) ?? 0}
               tint={TOKENS_BY_ID[group.authorStyle]?.accent}
               interests={interestsByAuthor.get(group.author.toLowerCase())}
               avatar={
@@ -277,6 +324,7 @@ function PinnedPage({
   interests,
   author,
   isOwner,
+  streak = 0,
   children,
 }: {
   index: number;
@@ -285,6 +333,7 @@ function PinnedPage({
   interests?: string;
   author?: string;
   isOwner?: boolean;
+  streak?: number;
   children: ReactNode;
 }) {
   return (
@@ -300,6 +349,30 @@ function PinnedPage({
       {avatar && <Polaroid src={avatar.src} name={avatar.name} since={avatar.since} index={index} />}
       {/* what they're into — a living line their agent rewrites per publish */}
       {interests && author && <InterestsTag author={author} interests={interests} index={index} />}
+      {/* a lit flame on the paper's bottom edge while a publish streak lives */}
+      {streak >= 2 && (
+        <div
+          title={`${author} has published ${streak} days straight`}
+          style={{
+            position: "absolute",
+            bottom: "-13px",
+            left: "clamp(14px, 5vw, 52px)",
+            zIndex: 6,
+            background: "#FFF3BF",
+            padding: "5px 12px 6px",
+            boxShadow: noteShadow,
+            transform: `rotate(${index % 2 === 0 ? "-2deg" : "2deg"})`,
+            fontFamily: script,
+            fontWeight: 700,
+            fontSize: "16px",
+            lineHeight: 1,
+            color: ink,
+            whiteSpace: "nowrap",
+          }}
+        >
+          🔥 {streak}-day streak
+        </div>
+      )}
       {/* masking tape across the top — on the board owner's paper, someone
           has written on it in sharpie (zero-setup: first corner claimed
           runs the board) */}

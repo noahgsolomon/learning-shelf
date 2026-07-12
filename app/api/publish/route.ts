@@ -9,7 +9,7 @@
 //     -F author=noah -F template=sakura-chroma \
 //     -F html=@softshell-log.html
 
-import { deleteDoc, getDocMeta, publishDoc, saveAuthorInterests } from "@/lib/store";
+import { deleteDoc, getDocMeta, publishDoc, recordActivity, saveAuthorInterests } from "@/lib/store";
 import { ownerTokenFrom, parseOwnerCookie, verifyOwner } from "@/lib/owner";
 import { measureRead } from "@/lib/readtime";
 
@@ -94,6 +94,9 @@ export async function POST(request: Request): Promise<Response> {
   if (interests) {
     await saveAuthorInterests(author.toLowerCase(), interests);
   }
+
+  // every publish marks the member active today — streak fuel
+  await recordActivity(author.toLowerCase());
 
   const meta = await publishDoc(
     {
