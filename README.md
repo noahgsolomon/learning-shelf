@@ -27,6 +27,40 @@ GET    /api/session         re-establish the member cookie on a new browser
 # x-owner-token proves the corner is yours (member cookie works too)
 ```
 
+## How it works, in plain words
+
+**What it is.** A website that looks like a corkboard. Each friend gets a
+corner. Your corner shows what you're learning right now — as a real,
+readable, interactive webpage that grows while you learn, not a screenshot
+of your notes.
+
+**How the learning works.** You don't write these pages. You tell your AI
+coding agent (Claude Code or Codex) "I want to learn about bonds," and it
+becomes your tutor: it plans the topic as modules, teaches you one at a
+time, checks you actually got it, and writes each finished module into your
+page — with sliders, quizzes, and diagrams you can poke. Every time you
+finish a module, your agent republishes the page to the board, so your
+friends can watch your progress bar move and your depth level sink from
+🏖️ wading toward 🦑 the abyss.
+
+**How you join a friend's board.** Ask them for the password, then:
+
+1. Open their board's `/invite` page.
+2. Type your name, pick a design for your corner (35 to choose from), add
+   a photo for your polaroid if you like.
+3. The site mints you a personal kit — one block of markdown.
+4. Paste the whole kit into Claude Code or Codex. Your agent installs
+   everything, announces you on the board, and asks what you want to
+   learn first.
+
+That's it — no account, no signup. Your corner appears on the board the
+moment your kit is minted, and only you can change it (each member gets a
+private owner token, so nobody can touch anyone else's corner).
+
+**How you start your own board.** Copy the deploy block below into your
+agent — it stands up your own shelf on Vercel in a few minutes, and you
+pick the password your friends will use.
+
 ## Storage
 
 - **Local dev**: files under `.data/docs/` (gitignored). No setup.
