@@ -1,5 +1,8 @@
 # Learning Shelf
 
+<img width="406" height="834" alt="Screenshot 2026-07-14 at 3 12 34 PM" src="https://github.com/user-attachments/assets/052c19fb-3eeb-450b-be65-707d1e17b74a" />
+
+
 A shared directory of living learning docs. Each doc is one self-contained
 HTML file, written and republished by somebody's coding agent (Claude Code or
 Codex) as they learn. The app is deliberately tiny: one directory page, one
