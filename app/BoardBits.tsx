@@ -305,6 +305,51 @@ function DepthReport({ doc, fill }: { doc: DocMeta; fill: string }) {
   );
 }
 
+// ── About ─────────────────────────────────────────────────────────────────
+// An index card tacked to the paper's bottom-right — the member's own page
+// about themselves. Unlike the interests sticky this is a real link out to
+// /who/<author>, so the pixel curtain picks it up and carries their color
+// across the navigation.
+
+export function AboutNote({
+  author,
+  name,
+  index,
+}: {
+  author: string;
+  name: string;
+  index: number;
+}) {
+  const lean = index % 2 === 0 ? "2.2deg" : "-1.8deg";
+
+  return (
+    <a
+      href={`/who/${author}`}
+      aria-label={`who ${name} is`}
+      style={{
+        position: "absolute",
+        bottom: "-16px",
+        right: "clamp(12px, 4vw, 46px)",
+        zIndex: 6,
+        rotate: lean,
+        transform: `rotate(${lean})`,
+        display: "block",
+        background: "linear-gradient(135deg, #FFF3BF 0%, #FFE8A3 100%)",
+        padding: "8px 15px 9px",
+        boxShadow: "1px 2px 8px rgba(45,42,38,0.32)",
+        fontFamily: sharpie,
+        fontSize: "16px",
+        lineHeight: 1,
+        color: "#3B2F21",
+        textDecoration: "none",
+        whiteSpace: "nowrap",
+      }}
+    >
+      who is {name}? →
+    </a>
+  );
+}
+
 // ── Interests ─────────────────────────────────────────────────────────────
 // A small sticky at the paper's top-left — the polaroid's counterpart — that
 // morphs into the member's "what I'm into" note. The text is a living line

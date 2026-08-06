@@ -130,6 +130,10 @@ function shelfSkill(
   ownerToken: string,
 ): string {
   const secret = process.env.SHELF_SECRET ?? "MISSING_SECRET";
+  // their corner's dominant color — the tint the pixel curtain wears, which
+  // their about page has to hand back when it links home
+  const accent =
+    STYLE_TOKENS.find((b) => b.id === bandStyle)?.accent ?? "#FFD43B";
 
   return `---
 name: learning-shelf
@@ -289,6 +293,53 @@ curl -sS -X POST "${SHELF_URL}/api/avatar" \\
 - Re-uploading replaces the old photo. It shows at \`${SHELF_URL}/a/${author}\`.
 - Never upload a photo ${name} didn't explicitly choose, and never set another
   author's photo.
+
+## Your page about yourself (optional, one per person)
+
+Separate from the learning docs, ${name} can pin ONE page about themselves —
+who they are, what they've built, what they're into, how to reach them. It
+hangs off the "who is ${author}?" note on their corner and lives at
+\`${SHELF_URL}/who/${author}\`.
+
+Offer to make one when ${name} asks for a bio, an about page, a "little doc
+about me", or something to hand a recruiter, a collaborator, or a new friend.
+Build it exactly like a doc — one self-contained HTML file, a template from
+the beautiful-html-templates skill, everything inlined — then upload:
+
+\`\`\`bash
+curl -sS -X POST "${SHELF_URL}/api/about" \\
+  -H "x-shelf-secret: ${secret}" \\
+  -H "x-owner-token: ${ownerToken}" \\
+  -F "author=${author}" \\
+  -F "html=@/absolute/path/to/about.html"
+\`\`\`
+
+Two rules specific to this page:
+
+1. **It must link back to the board, near the top**, and the link must carry
+   ${name}'s color so the pixel curtain plays on the way home:
+
+   \`\`\`html
+   <a href="/?curtain=${encodeURIComponent(accent)}">← back to the shelf</a>
+   \`\`\`
+
+   The \`%23\` is a literal \`#\` — written raw it would be read as a page
+   anchor and the color would never arrive. Style the link inside the page's
+   own design system so it looks like it belongs, not like our chrome; the
+   shelf serves this page untouched and adds nothing of its own.
+2. **It's a page, not a doc.** No modules, no progress bar, no copy buttons —
+   those belong to learning docs. This one just says who ${name} is.
+
+Re-uploading replaces it. To take it down:
+
+\`\`\`bash
+curl -sS -X DELETE "${SHELF_URL}/api/about?author=${author}" \\
+  -H "x-shelf-secret: ${secret}" \\
+  -H "x-owner-token: ${ownerToken}"
+\`\`\`
+
+Never write a page about someone else, and never upload one ${name} hasn't
+seen.
 
 ## Browsing
 

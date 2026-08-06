@@ -420,6 +420,77 @@ export async function listAvatarAuthors(): Promise<Set<string>> {
   }
 }
 
+// ── About pages ──────────────────────────────────────────────────────────
+// One optional "who I am" page per author, stored exactly like a doc but keyed
+// by author instead of slug: about/<author>.html. Served verbatim at
+// /who/<author>. Re-uploading replaces it.
+
+const ABOUT_DIR = join(process.cwd(), ".data", "about");
+
+export async function publishAbout(author: string, html: string): Promise<void> {
+  if (usingBlob()) {
+    const { put } = await import("@vercel/blob");
+    await put(`about/${author}.html`, html, {
+      access: "public",
+      contentType: "text/html; charset=utf-8",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      cacheControlMaxAge: 0,
+    });
+    return;
+  }
+
+  await mkdir(ABOUT_DIR, { recursive: true });
+  await writeFile(join(ABOUT_DIR, `${author}.html`), html, "utf-8");
+}
+
+export async function getAboutHtml(author: string): Promise<string | undefined> {
+  if (usingBlob()) {
+    const { head } = await import("@vercel/blob");
+    try {
+      const blob = await head(`about/${author}.html`);
+      const res = await fetch(blob.url, { cache: "no-store" });
+      return await res.text();
+    } catch {
+      return undefined;
+    }
+  }
+
+  try {
+    return await readFile(join(ABOUT_DIR, `${author}.html`), "utf-8");
+  } catch {
+    return undefined;
+  }
+}
+
+export async function deleteAbout(author: string): Promise<void> {
+  if (usingBlob()) {
+    const { del } = await import("@vercel/blob");
+    await del([`about/${author}.html`]).catch(() => {});
+    return;
+  }
+  const { unlink } = await import("node:fs/promises");
+  await unlink(join(ABOUT_DIR, `${author}.html`)).catch(() => {});
+}
+
+// Which authors have an about page — one cheap call for the whole board.
+export async function listAboutAuthors(): Promise<Set<string>> {
+  if (usingBlob()) {
+    const { list } = await import("@vercel/blob");
+    const { blobs } = await list({ prefix: "about/", limit: 1000 });
+    return new Set(
+      blobs.map((b) => b.pathname.replace(/^about\//, "").replace(/\.html$/, "")),
+    );
+  }
+
+  try {
+    const files = await readdir(ABOUT_DIR);
+    return new Set(files.map((f) => f.replace(/\.html$/, "")));
+  } catch {
+    return new Set();
+  }
+}
+
 export async function getDocHtml(slug: string): Promise<string | undefined> {
   if (usingBlob()) {
     const { head } = await import("@vercel/blob");

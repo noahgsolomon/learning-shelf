@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { BOARD_REVEAL_SCRIPT } from "@/lib/reveal";
 
 export const metadata: Metadata = {
   title: "Learning Shelf",
@@ -64,6 +65,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           backgroundAttachment: "fixed",
         }}
       >
+        {/* Coming BACK from someone's page (?curtain=<hex>): rebuild the tile
+            cover in their color synchronously, before the board paints, then
+            uncover it — the mirror of the wipe that carried you out. Must be
+            the first thing in <body>, ahead of any corkboard. */}
+        <script dangerouslySetInnerHTML={{ __html: BOARD_REVEAL_SCRIPT }} />
         {children}
       </body>
     </html>

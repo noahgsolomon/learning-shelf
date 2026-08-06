@@ -1,10 +1,12 @@
 "use client";
 
-// The pixel curtain for entering someone's note: clicking a doc card sweeps
-// a wavefront of chunky squares down the screen — tinted with THAT author's
-// dominant color (their style token's accent, read from the paper's
-// data-curtain-tint) — then navigates with ?curtain=<tint> so the doc page
-// plays the matching pixel REVEAL on arrival. Real Motion+ curtains
+// The pixel curtain for entering someone's note or their about page: clicking
+// a doc card (or the "who is …?" note) sweeps a wavefront of chunky squares
+// down the screen — tinted with THAT author's dominant color (their style
+// token's accent, read from the paper's data-curtain-tint) — then navigates
+// with ?curtain=<tint> so the destination plays the matching pixel REVEAL on
+// arrival. Pages link home as /?curtain=<tint> to get the same wipe on the way
+// back, played by BOARD_REVEAL_SCRIPT in the layout. Real Motion+ curtains
 // (vendored in lib/curtains — see VENDORED.md): size 100, direction 90
 // (down), noise 0.4.
 
@@ -35,7 +37,8 @@ export function PixelCurtain() {
       // this runs in the capture phase, before the depth tag's own handler —
       // leave clicks on interactive things inside the card (the tag) alone
       if (target.closest?.('button, [role="button"]')) return;
-      const anchor = target.closest?.('a[href^="/d/"]');
+      // doc cards and the "who is …?" note both leave the board this way
+      const anchor = target.closest?.('a[href^="/d/"], a[href^="/who/"]');
       if (!(anchor instanceof HTMLAnchorElement)) return;
       e.preventDefault();
 

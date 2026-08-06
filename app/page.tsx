@@ -6,13 +6,13 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { cookies } from "next/headers";
-import { getAuthorRecord, listAvatarAuthors, listDocs, listJoinedAuthors, type DocMeta } from "@/lib/store";
+import { getAuthorRecord, listAboutAuthors, listAvatarAuthors, listDocs, listJoinedAuthors, type DocMeta } from "@/lib/store";
 import { OWNER_COOKIE } from "@/lib/owner";
 import type { AuthorGroup } from "@/lib/sections";
 import { TOKENS_BY_ID } from "@/lib/styleTokens";
 import { LetsLearn } from "./LetsLearn";
 import { OwnerControls } from "./OwnerControls";
-import { InterestsTag, Polaroid } from "./BoardBits";
+import { AboutNote, InterestsTag, Polaroid } from "./BoardBits";
 import { PagedPanel } from "./PagedPanel";
 import { Superlatives, type Award } from "./Superlatives";
 import { currentStreak } from "@/lib/streak";
@@ -43,10 +43,11 @@ const pinFills = [
 ];
 
 export default async function ShelfPage() {
-  const [docs, avatarAuthors, joined] = await Promise.all([
+  const [docs, avatarAuthors, joined, aboutAuthors] = await Promise.all([
     listDocs(),
     listAvatarAuthors(),
     listJoinedAuthors(),
+    listAboutAuthors(),
   ]);
   // Whose browser is this? The owner cookie (set when their kit was minted)
   // unlocks the controls strip on that member's own paper.
@@ -265,6 +266,7 @@ export default async function ShelfPage() {
               streak={streaks.get(group.author.toLowerCase()) ?? 0}
               tint={TOKENS_BY_ID[group.authorStyle]?.accent}
               interests={interestsByAuthor.get(group.author.toLowerCase())}
+              hasAbout={aboutAuthors.has(group.author.toLowerCase())}
               avatar={
                 avatarAuthors.has(group.author.toLowerCase())
                   ? {
@@ -326,6 +328,7 @@ function PinnedPage({
   author,
   isOwner,
   streak = 0,
+  hasAbout,
   children,
 }: {
   index: number;
@@ -335,6 +338,7 @@ function PinnedPage({
   author?: string;
   isOwner?: boolean;
   streak?: number;
+  hasAbout?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -350,6 +354,8 @@ function PinnedPage({
       {avatar && <Polaroid src={avatar.src} name={avatar.name} since={avatar.since} index={index} />}
       {/* what they're into — a living line their agent rewrites per publish */}
       {interests && author && <InterestsTag author={author} interests={interests} index={index} />}
+      {/* their own page about themselves, if they've pinned one */}
+      {hasAbout && author && <AboutNote author={author} name={author} index={index} />}
       {/* a lit flame on the paper's bottom edge while a publish streak lives */}
       {streak >= 2 && (
         <div
