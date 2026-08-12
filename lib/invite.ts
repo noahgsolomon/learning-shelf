@@ -1,7 +1,8 @@
 // Invite bundle generator: given a friend's name (and a band style), produce
-// one paste-into-your-agent installer document that carries all three skills —
+// one paste-into-your-agent installer document that carries all four skills —
 // the shelf contributor skill (with the secret), the learn skill (how this
-// group likes to learn), and the beautiful-html-templates skill. The friend
+// group likes to learn), the code-dojo skill (practice docs that test you),
+// and the beautiful-html-templates skill. The friend
 // pastes the whole thing into Claude Code OR Codex and the agent installs the
 // kit for BOTH tools, so whichever one they use (now or later) knows the shelf.
 
@@ -32,21 +33,24 @@ works. The kit installs itself for BOTH tools.
 group of friends pin living HTML learning docs, each written and republished by
 that person's coding agent as they learn. Your job right now:
 
-1. Create the three skill files below in BOTH tools' homes — even if only one
+1. Create the four skill files below in BOTH tools' homes — even if only one
    of the tools is installed today, create both sets, so the other tool is
    ready the moment ${name} adopts it. Same contents at each path:
    - \`~/.claude/skills/learning-shelf/SKILL.md\` and \`~/.codex/skills/learning-shelf/SKILL.md\`
    - \`~/.claude/skills/learn/SKILL.md\` and \`~/.codex/skills/learn/SKILL.md\`
+   - \`~/.claude/skills/code-dojo/SKILL.md\` and \`~/.codex/skills/code-dojo/SKILL.md\`
    - \`~/.claude/skills/beautiful-html-templates/SKILL.md\` and \`~/.codex/skills/beautiful-html-templates/SKILL.md\`
-2. Add the "Learning → The Shelf" block (further below, after the skill files)
-   to BOTH \`~/.claude/CLAUDE.md\` and \`~/.codex/AGENTS.md\` — create either
-   file if it doesn't exist, and skip a file if it already has a
-   "## Learning → The Shelf" section. In \`~/.codex/AGENTS.md\`, prepend the
-   block with this line (Codex doesn't auto-discover skills):
+2. Add the two habit blocks (further below, after the skill files) to BOTH
+   \`~/.claude/CLAUDE.md\` and \`~/.codex/AGENTS.md\` — create either file if it
+   doesn't exist, and skip a block if that file already has its heading
+   ("## Learning → The Shelf" / "## Practice → The Dojo"). In
+   \`~/.codex/AGENTS.md\`, prepend them with this line (Codex doesn't
+   auto-discover skills):
    "Skills for this live at \`~/.codex/skills/*/SKILL.md\` — read the relevant
    SKILL.md and follow it whenever a skill is named below."
-   This block is what makes you proactively offer a tracked learning plan
-   whenever ${name} wants to learn something.
+   Together these are what make you proactively offer a tracked learning plan
+   when ${name} wants to learn something, and a dojo when they want to get
+   their coding skill back.
 3. Clone the template library if it isn't already there:
    \`git clone https://github.com/zarazhangrui/beautiful-html-templates ~/beautiful-html-templates\`
 4. Announce ${name} on the board — run this once, right now. It pins their
@@ -65,7 +69,8 @@ that person's coding agent as they learn. Your job right now:
 5. Confirm what you installed, show ${name} the board at ${SHELF_URL} —
    their corner is already pinned there — then ask what they're learning
    right now and offer to start their first doc (the learning-shelf skill
-   explains the whole ritual).
+   explains the whole ritual). Mention the other kind too: a dojo, if there's
+   a language they'd rather get their hands back into than read about.
 
 ──────── file: ~/.claude/skills/learning-shelf/SKILL.md AND ~/.codex/skills/learning-shelf/SKILL.md ────────
 
@@ -75,6 +80,10 @@ ${shelfSkill(name, author, bandStyle, ownerToken)}
 
 ${learnSkill()}
 
+──────── file: ~/.claude/skills/code-dojo/SKILL.md AND ~/.codex/skills/code-dojo/SKILL.md ────────
+
+${dojoSkill(name, author, bandStyle, ownerToken)}
+
 ──────── file: ~/.claude/skills/beautiful-html-templates/SKILL.md AND ~/.codex/skills/beautiful-html-templates/SKILL.md ────────
 
 ${templatesSkill()}
@@ -82,6 +91,8 @@ ${templatesSkill()}
 ──────── append to ~/.claude/CLAUDE.md AND ~/.codex/AGENTS.md (skip if already present) ────────
 
 ${learningPlanRule(name, author, bandStyle)}
+
+${practiceRule(name)}
 
 ──────── end of files ────────
 `;
@@ -121,6 +132,33 @@ If ${name} says yes:
 
 If ${name} says no, just teach normally — still using the \`learn\` skill's
 depth-and-motivation style, just without creating a doc.`;
+}
+
+// The second habit: learning docs teach, dojos make you type. Lives beside the
+// learning rule in CLAUDE.md / AGENTS.md so the distinction is made before any
+// explaining starts.
+function practiceRule(name: string): string {
+  return `## Practice → The Dojo
+
+Learning docs teach; **dojos make ${name} type**. Use the \`code-dojo\` skill —
+not the learning-doc flow above — whenever they want to practise, drill,
+sharpen, refresh, or get back a programming skill: "help me practise Rust",
+"I want my TypeScript back", "drill me on Python", "my SQL is rusty",
+"I've been letting AI write everything and it shows".
+
+Two hard rules:
+
+1. **Read their dojo ledger before proposing anything** (the \`code-dojo\` skill
+   has the call). It knows which concepts are solid, which have faded, and
+   which never landed — and those want different responses. Never guess their
+   level or invent a starting point.
+2. **When they're stuck, never ask them to paste their code.** They press "I'm
+   stuck" in the doc and you read their actual attempts from the shelf. Give
+   the smallest hint that unblocks, aimed at their own code.
+
+If they ask to *learn* a language they've never used, that's a learning doc. If
+they ask to get *good at it again*, that's a dojo. When it's genuinely
+ambiguous, ask which they want — reading and typing are different afternoons.`;
 }
 
 function shelfSkill(
@@ -345,6 +383,380 @@ seen.
 
 The directory is \`${SHELF_URL}/\` — everyone's corners. Read others for
 inspiration; never publish to someone else's slug or author name.`;
+}
+
+// The practice half of the kit. A dojo publishes through the same /api/publish
+// endpoint as a learning doc — the shelf notices the challenge blocks and marks
+// it — so this skill is about AUTHORING challenges and coaching against the
+// ledger, not about a second publishing path.
+function dojoSkill(
+  name: string,
+  author: string,
+  bandStyle: string,
+  ownerToken: string,
+): string {
+  const secret = process.env.SHELF_SECRET ?? "MISSING_SECRET";
+
+  return `---
+name: code-dojo
+description: Build and run ${name}'s coding dojos — living HTML docs on The Shelf that teach a language and then make them actually write code in the browser, with tests, a skill ledger, and progressive difficulty. Use when ${name} wants to practise, refresh, sharpen, drill, or rebuild programming skill in a language ("get my Rust back", "I want to practise Python", "drill me on TypeScript"), when they ask for a hint on a challenge they're stuck on, or to add the next module to an existing dojo.
+---
+
+# The Dojo — ${name}'s practice skill
+
+A learning doc teaches. A **dojo** makes them type. It is the same kind of
+artifact — one self-contained HTML file, one template from
+beautiful-html-templates, published to The Shelf the same way — except that
+between the prose there are challenge blocks with a real editor, a real test
+runner, and a ledger that remembers how they did.
+
+**Why this exists (do not lose sight of it).** People who let AI write their
+code for a year can feel the atrophy. So the dojo's job is not coverage or
+completion — it is to find the specific things ${name} can no longer do cold,
+and make them do them cold. Every design decision below serves that.
+
+## Read this first, every session
+
+Before you plan anything, ask the shelf what they can actually do today:
+
+\`\`\`bash
+curl -sS "${SHELF_URL}/api/dojo/ledger?author=${author}" \\
+  -H "x-shelf-secret: ${secret}" \\
+  -H "x-owner-token: ${ownerToken}"
+\`\`\`
+
+The \`brief\` field is written for you — read it and obey it. The rest is the
+same data structured. Four states, and they want **opposite** responses:
+
+| state | means | what you do |
+|---|---|---|
+| \`solid\` | proven recently | don't waste their time; use it as scaffolding for harder work |
+| \`working\` | getting there | one more challenge at the same level, then raise it |
+| \`rusty\` | was genuinely solid, has faded | **drill it.** Do not re-explain what they already know — that's condescending. Short challenge, straight in. |
+| \`shaky\` | never actually landed | **re-teach it from a different angle**, then test. Repeating the same explanation harder does not work. |
+
+\`due\` is ordered weakest-recall-first — that's your reading order for what to
+put in front of them next. Skills decay on a 21-day half-life, so a concept
+they nailed two months ago will legitimately resurface. That is the feature.
+
+Never invent a level for them. If the ledger is empty, ask what they want to
+sharpen and say plainly that you have no history yet.
+
+## Your identity (do not change these)
+
+- **Your human is** \`${name}\` — always publish with \`author=${author}\`.
+- **Shelf URL**: \`${SHELF_URL}\`
+- **Publish secret**: \`${secret}\` (\`x-shelf-secret\`)
+- **${name}'s owner token**: \`${ownerToken}\` (\`x-owner-token\`)
+
+Never put either value inside an HTML doc and never commit them. The doc needs
+no secret at all — the reader's browser cookie authenticates submissions.
+
+## Publishing a dojo
+
+A dojo **is** a doc: publish it with the exact \`/api/publish\` call in the
+\`learning-shelf\` skill, same fields, same rules (local source file, republish
+on every change, both copy buttons, module progress fields). Two differences:
+
+- The shelf detects the challenge blocks itself and marks the doc as a dojo —
+  you don't send a flag. The board grows a \`⌨ dojo · N\` chip automatically.
+- \`subject\` should name the craft, not the syllabus: "Rust, properly" beats
+  "Rust Module 3".
+
+Read the published copy at \`${SHELF_URL}/d/<slug>\` and **click through a
+challenge yourself** — run a passing solution and a failing one — before
+telling ${name} it's ready. The runtime only attaches on the hosted copy, so
+opening the local file won't exercise it.
+
+## The shape of a good dojo
+
+**One continuous artifact, compounding.** This is the single most important
+structural rule and the main thing separating a dojo from a problem set. Across
+a dojo's modules ${name} should be **building one real system, one piece at a
+time** — module 1's challenge produces something module 3's challenge extends.
+By the end they have a working thing they'd recognise, not fourteen orphan
+puzzles.
+
+Good spines: a reactive signal graph. A retrying HTTP client with jitter and a
+circuit breaker. A tiny query planner. A text diff. A router with path params.
+An LRU with TTL eviction. A tokenizer, then a parser, then an evaluator. A
+virtual scroller. A job queue with backpressure.
+
+**Prose first, then the challenge.** Use the \`learn\` skill for the teaching
+around each challenge: motivate the idea, explain it deeply, one concept at a
+time. The challenge is where understanding gets *tested*, not where it gets
+*introduced* — never ask them to write something you haven't taught in that
+module.
+
+### Banned outright
+
+No "given an array of integers". No two-sum, no anagrams, no fizzbuzz, no
+reverse-a-string, no balanced-parens-for-its-own-sake. No puzzle whose only
+content is spotting a trick. Nothing that reads like interview prep. If a
+challenge could appear on a competitive-programming site unchanged, delete it
+and write a real one.
+
+The test is: **would a working engineer recognise this as a thing they've
+actually had to do?** If not, it's slop.
+
+### Rotate the shapes
+
+Declare \`data-shape\`. Blank-page implementation is the *rare* case — it's the
+least informative about real skill and the most tedious:
+
+| shape | the ask |
+|---|---|
+| \`fix\` | here's code and a failing test — find the bug |
+| \`optimize\` | it passes; now make it not embarrassing (tests assert behaviour, brief states the bar) |
+| \`refactor\` | it works and reads badly — same tests, better code |
+| \`extend\` | add a capability to a system that already works |
+| \`design\` | shape the API/types first; tests check the contract |
+| \`predict\` | what does this print? (no editor — still ledgered) |
+| \`implement\` | write it from scratch — use sparingly |
+
+\`fix\` and \`extend\` are the highest-signal shapes for atrophy, because they're
+what the job actually is. Lead with them.
+
+### Difficulty
+
+Aim for **solvable in one or two runs, but not zero thought**. The ledger
+measures cold solves, so a challenge they grind out over ten runs teaches you
+less than two challenges they get in one each. If the ledger says \`shaky\`,
+make the next one *smaller*, not harder.
+
+## The markup contract
+
+The shelf injects the editor, highlighter, runner, and recorder. Your doc
+supplies only markup. Get these attributes right — the ledger keys on them.
+
+\`\`\`html
+<section class="dojo-challenge"
+         data-challenge="signal-recompute"
+         data-title="Make the signal recompute"
+         data-lang="ts"
+         data-skills="closures,dependency-tracking"
+         data-shape="fix">
+  <div class="dojo-brief">
+    <p>Two sentences of real stakes, then exactly what must be true when
+       it passes.</p>
+  </div>
+  <script type="text/plain" class="dojo-starter">
+    function computed(fn) {
+      return { get value() { return fn() } }
+    }
+  </script>
+  <script type="text/plain" class="dojo-tests">
+    test("recomputes when a dependency changes", () => {
+      const a = signal(1)
+      const doubled = computed(() => a.value * 2)
+      a.value = 5
+      expect(doubled.value).toBe(10)
+    })
+  </script>
+  <script type="text/plain" class="dojo-solution">
+    // optional. If present, they can reveal it — and it's recorded, and it
+    // costs mastery. Include one for anything genuinely hard.
+  </script>
+</section>
+\`\`\`
+
+- \`data-challenge\` — kebab-case, **stable forever**. Changing it orphans their
+  history on that challenge. Unique within the doc.
+- \`data-lang\` — \`ts\` \`js\` \`python\` \`rust\` \`go\`.
+- \`data-skills\` — **the axis the entire ledger turns on.** Kebab-case, 1–3 per
+  challenge, max 8. Reuse the exact names already in the ledger; do not write
+  \`borrow-checker\` when \`borrowing\` is already there, or their history splits
+  in half and the progression breaks. Check the ledger before inventing a name.
+  Name *concepts* (\`ownership\`, \`generators\`, \`window-functions\`,
+  \`error-propagation\`), never topics (\`chapter-2\`) and never languages.
+- Code blocks are \`<script type="text/plain">\`, indented naturally — the
+  runtime dedents. They don't count toward the doc's word count, which is
+  correct: reading time should measure prose.
+- Never write a closing script tag inside a code block.
+- A section with neither a starter nor a tests block is left alone entirely and
+  excluded from the challenge count — so a half-written challenge fails safe.
+- **\`predict\` challenges** carry no editor: put the code to read in
+  \`.dojo-starter\` (rendered read-only and highlighted) and the exact expected
+  answer in \`.dojo-tests\`. Add \`data-choices="4|8|undefined|throws"\` to get
+  radio buttons instead of a text box — better whenever the answer space is
+  small, and it can't be failed on a stray space.
+- \`describe()\` isn't a thing; nested groups are flattened to \`group › test\`.
+  One flat list of \`test()\` calls is the intended style.
+
+## The test API, per language
+
+The learner's code and your test block are sandwiched with a harness that
+reports results. Each language's harness is idiomatic *for that language* on
+purpose — the point is rebuilding real fluency, so Rust gets \`assert_eq!\`, not
+a JavaScript matcher chain.
+
+**ts / js** — runs in their own browser, instantly and free.
+\`\`\`js
+test("name", () => { ... })                 // async functions work
+expect(x).toBe(y) / .toEqual(y)             // toEqual is deep
+expect(x).toBeCloseTo(y, digits) / .toContain(y) / .toMatch(/re/)
+expect(x).toBeTruthy() / .toBeFalsy() / .toBeNull() / .toBeUndefined()
+expect(x).toHaveLength(n) / expect(fn).toThrow("substring" | /re/)
+expect(x).not.toBe(y)                       // .not works on all of them
+assert(cond, "message")
+\`\`\`
+
+**python**
+\`\`\`python
+@test("name")
+def _():
+    expect(x).to_equal(y)      # to_be, to_be_close_to(y, digits), to_contain,
+                               # to_have_length, to_be_truthy, to_be_none
+    expect(fn).to_raise(ValueError, match="text")
+    expect(x).not_.to_equal(y)
+    assert cond, "message"     # plain assert works too
+\`\`\`
+
+**rust** — the learner's code must **not** define \`fn main\` (the harness owns it).
+\`\`\`rust
+dojo_case("name", || {
+    assert_eq!(add(1, 2), 3);
+    assert!(cond, "message");
+});
+\`\`\`
+
+**go** — package-level code only; no \`func main\`.
+\`\`\`go
+dojoCase("name", func() {
+    assertEqual(Add(1, 2), 3)      // generic over comparable
+    assertTrue(cond, "message")
+})
+\`\`\`
+
+### Runtime limits — design challenges inside these
+
+- **stdlib only.** No crates, no pip installs, no npm packages. There is no
+  network in the sandbox.
+- \`ts\` and \`js\` run **in the reader's own browser** — a few milliseconds, free,
+  no server. Keep TypeScript to **erasable syntax**: no \`enum\`, no \`namespace\`,
+  no constructor parameter properties. Those still work, but they force the run
+  onto the server and lose the instant feedback loop that makes drilling
+  pleasant.
+- **The editor type-checks; the runtime doesn't.** Monaco runs the real
+  TypeScript service, so wrong types get squiggles, hovers and completions as
+  they would in VS Code — but that's *advisory only* and never decides whether
+  a challenge is green. At execution time types are erased, so a **test can
+  never assert on a type error**. Design the tests around runtime behaviour,
+  and let the squiggles teach the types.
+- Rust and Go compile on the server: ~1–3s a run. Python is ~1s.
+- Budgets: 4s in the browser, 10s to run and 25s to compile on the server.
+  Infinite loops report as a timeout, not a crash.
+- One file per challenge. There's no multi-module layout.
+- Tests print pass/fail; \`console.log\`/\`print\` output survives separately and
+  is shown to them, so debugging by printing works.
+
+## Theming — the dojo must look like the doc
+
+The injected runtime is styled **entirely** from CSS custom properties. Set
+them once on \`:root\` in the doc, mapped from the template's real palette, and
+the editor, buttons, results and syntax colours all land inside the template's
+design system. Skip this and it will look generic — which is the failure mode
+this whole project exists to avoid.
+
+\`\`\`css
+:root {
+  --dojo-paper: #F0EBDE;  --dojo-ink: #23201B;   --dojo-accent: #1F2BE0;
+  --dojo-muted: #6B655B;  --dojo-line: #C9C1AE;
+  --dojo-pass: #1E7A44;   --dojo-fail: #B3261E;
+  --dojo-code-bg: #FBF8EF; --dojo-code-ink: #23201B;
+  --dojo-font-mono: 'DM Mono', ui-monospace, monospace;
+  --dojo-font-body: 'Newsreader', serif;
+  --dojo-radius: 2px;
+  --dojo-syn-keyword: #1F2BE0; --dojo-syn-string: #1E7A44;
+  --dojo-syn-comment: #8C8577; --dojo-syn-number: #A6402A;
+  --dojo-syn-fn: #23201B;      --dojo-syn-type: #6B3FA0;
+  --dojo-syn-punct: #6B655B;
+}
+\`\`\`
+
+### Three rules the editor imposes on the doc
+
+The challenge editor is Monaco — VS Code's editor — so the doc has to be a
+good host for it:
+
+1. **\`--dojo-font-mono\` must name a font the doc actually loads.** Monaco
+   measures the font to place the caret, so a font that isn't loaded (or a bare
+   \`monospace\` when the template really wanted its own mono) puts the cursor a
+   few pixels off every column. Load it with the template's other fonts.
+2. **Never write bare \`pre\`, \`code\`, \`span\`, or \`div\` selectors under
+   \`.dojo-challenge\`.** Those rules leak into Monaco's internals and break the
+   editor's layout from the outside. Style your own classes
+   (\`.dojo-brief\`, and any you add) and nothing else.
+3. **Don't put \`transform\`, \`filter\`, or \`will-change\` on an ancestor of a
+   challenge block.** Any of them creates a containing block that breaks the
+   autocomplete popup's ability to escape a scrolling container, and \`scale()\`
+   also breaks click targeting inside the editor. Decorate around the
+   challenges, not above them.
+
+Pick the syntax colours **from the template's own palette** — a two-colour
+template gets a two-colour highlighter with weight and italics doing the rest.
+Never introduce a colour the template doesn't have — with **one** functional
+exception. If the palette genuinely can't tell pass from fail (a strict
+two-colour template), add a single second ink for \`--dojo-fail\`, desaturated to
+sit with the palette, the way a riso print adds a second drum. Mistaking a
+failure for a pass is a real cost; decorative purity isn't worth it.
+
+If the template is dark, these values are dark; the runtime has no opinion.
+
+## Hints — the whole point of the ledger
+
+When ${name} says they're stuck, **do not ask them to paste their code.** They
+press "I'm stuck" in the doc, which files their current draft. You read it:
+
+\`\`\`bash
+curl -sS "${SHELF_URL}/api/dojo/attempts?author=${author}&slug=<slug>&challenge=<challenge-id>" \\
+  -H "x-shelf-secret: ${secret}" \\
+  -H "x-owner-token: ${ownerToken}"
+\`\`\`
+
+Newest first, with the code of each attempt, which tests failed, how many runs,
+and how long they've been on it. Add \`&full=1\` for every code body, drop
+\`&challenge=\` for the whole doc, \`&limit=N\` to widen.
+
+**Compare consecutive attempts.** The diff between run 3 and run 4 is where the
+misunderstanding lives — that's the thing to name. Then:
+
+1. Point at *their* code, quoting their own variable names. Never a generic
+   explanation of the concept.
+2. Give the **smallest** hint that unblocks: name the wrong assumption, don't
+   supply the line. If they ask again, go one step further. Only write the code
+   if they explicitly ask for the answer.
+3. If the same misunderstanding shows up across several challenges, say so —
+   that's a teaching gap in the doc, and the next module should address it
+   directly.
+
+## Keeping it going
+
+After a session, before you re-publish:
+
+1. Re-read the ledger — it moved.
+2. Bump \`modulesDone\` / \`currentModule\` in the publish call, honestly.
+3. Add the next module against what the ledger now says, not against the plan
+   you made last week. If \`borrowing\` went from shaky to working, the next
+   challenge should lean on it, not re-drill it.
+4. Refresh \`description\` and the \`interests\` line.
+
+Mastery is an exponentially-weighted average of recent attempts, discounted by
+grinding, hints and reveals, then decayed by time. It is deliberately hard to
+inflate. Never talk about it as a score to maximise — it's an instrument for
+choosing what to practise, and if ${name} starts gaming it, it stops working.
+
+## When ${name} asks to start a dojo
+
+1. Read the ledger. Say what you see, honestly and briefly.
+2. Ask what they want to sharpen and what the spine should be — offer two or
+   three real systems they could build across the modules.
+3. Ask about the template (their usual \`${bandStyle}\`, surprise them, or a
+   named one), then follow the \`beautiful-html-templates\` skill.
+4. Plan the module list, generate **only module 1** with **one or two**
+   challenges, publish, and hand them the URL.
+5. Wait. Don't run ahead — the next module depends on how module 1 actually
+   went, and that's the whole idea.`;
 }
 
 function learnSkill(): string {

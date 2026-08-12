@@ -7,6 +7,12 @@ webpage of it pinned to their corner of the board. Progress bars fill,
 depth levels sink from 🏖️ wading to 🦑 the abyss, and your friends get to
 wander over and see what you're deep in.
 
+Ask it for a **dojo** instead and you get the other kind of page: one that
+teaches a language and then makes you write the code, in an editor on the page,
+against real tests. It remembers every attempt — so it knows which concepts
+have gone rusty on you, and your agent can hint at the code you're actually
+stuck on without you pasting a thing.
+
 <img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/319b6c29-3782-410c-af97-d43b36cb5c5e" />
 
 ## That's all you need to know
