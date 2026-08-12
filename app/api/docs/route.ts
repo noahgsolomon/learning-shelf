@@ -36,6 +36,8 @@ export async function GET(request: Request): Promise<Response> {
         subject: d.subject,
         description: d.description,
         author: d.author,
+        kind: d.kind,
+        challengesTotal: d.challengesTotal,
         modulesDone: d.modulesDone,
         modulesTotal: d.modulesTotal,
         currentModule: d.currentModule,

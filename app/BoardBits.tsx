@@ -144,9 +144,52 @@ export function Polaroid({ src, name, since, index }: { src: string; name: strin
 // the author's card; a click morphs it into the full depth report. The cards
 // are links, so the tag swallows the click instead of navigating.
 
+// ── Dojo chip ─────────────────────────────────────────────────────────────
+// Marks a doc you can't finish by reading. Deliberately NOT another sticky
+// note: the depth sticky says how much has been written, this says the doc is
+// somewhere you go to work — so it's a stamped tag, not a scrap of paper.
+
+function DojoChip({ count, tilt }: { count: number; tilt: number }) {
+  return (
+    <span
+      title={`${count} coding drill${count === 1 ? "" : "s"} in this doc — write the code, run the tests`}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "5px",
+        padding: "2px 8px 3px",
+        border: `1.5px dashed ${ink}`,
+        borderRadius: "2px",
+        background: "rgba(253,253,251,0.55)",
+        fontFamily: slab,
+        fontWeight: 700,
+        fontSize: "10.5px",
+        letterSpacing: "0.1em",
+        textTransform: "uppercase",
+        lineHeight: 1.4,
+        color: ink,
+        whiteSpace: "nowrap",
+        rotate: tilt % 2 === 0 ? "1.2deg" : "-1.4deg",
+        verticalAlign: "middle",
+      }}
+    >
+      <span aria-hidden style={{ fontSize: "11px" }}>⌨</span>
+      dojo · {count}
+    </span>
+  );
+}
+
 export function DepthTag({ doc, tilt = 0 }: { doc: DocMeta; tilt?: number }) {
   const [open, setOpen] = useState(false);
-  if (doc.wordCount <= 0) return null;
+  // Rendered from inside here rather than beside every call site: all eight
+  // panel styles already place a DepthTag next to the subject, so a doc that
+  // is also a dojo picks up its chip everywhere from this one spot.
+  const dojo =
+    doc.kind === "dojo" && doc.challengesTotal > 0 ? (
+      <DojoChip count={doc.challengesTotal} tilt={tilt} />
+    ) : null;
+
+  if (doc.wordCount <= 0) return dojo;
   const now = depthIndex(doc.wordCount);
   const fill = STICKY_FILLS[tilt % STICKY_FILLS.length];
   const id = `depth-${doc.slug}`;
@@ -192,6 +235,8 @@ export function DepthTag({ doc, tilt = 0 }: { doc: DocMeta; tilt?: number }) {
         <span aria-hidden style={{ fontSize: "13px" }}>{DEPTH_LEVELS[now].emoji}</span>
         {DEPTH_LEVELS[now].label}
       </motion.span>
+
+      {dojo}
 
       <AnimatePresence>
         {open && (

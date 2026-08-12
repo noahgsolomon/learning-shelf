@@ -25,6 +25,11 @@ export type DocMeta = {
   // never uploaded, so it can't drift from the actual document.
   readMinutes: number;
   wordCount: number;
+  // Likewise measured, not declared: a doc containing challenge blocks is a
+  // dojo, and challengesTotal is how many it actually holds. How many the
+  // reader has SOLVED is per-person and lives in their dojo ledger, not here.
+  kind: "doc" | "dojo";
+  challengesTotal: number;
   updatedAt: string; // ISO
 };
 
@@ -105,6 +110,8 @@ export async function listDocs(): Promise<DocMeta[]> {
     if (!m.currentModule) m.currentModule = "";
     if (typeof m.readMinutes !== "number") m.readMinutes = 0;
     if (typeof m.wordCount !== "number") m.wordCount = 0;
+    if (m.kind !== "dojo") m.kind = "doc";
+    if (typeof m.challengesTotal !== "number") m.challengesTotal = 0;
   }
 
   return metas.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));

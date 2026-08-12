@@ -12,6 +12,7 @@
 import { deleteDoc, getDocMeta, publishDoc, recordActivity, saveAuthorInterests } from "@/lib/store";
 import { ownerTokenFrom, parseOwnerCookie, verifyOwner } from "@/lib/owner";
 import { measureRead } from "@/lib/readtime";
+import { countChallenges } from "@/lib/dojo";
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const MAX_HTML_BYTES = 5 * 1024 * 1024;
@@ -98,11 +99,16 @@ export async function POST(request: Request): Promise<Response> {
   // every publish marks the member active today — streak fuel
   await recordActivity(author.toLowerCase());
 
+  // Both measured server-side from the doc itself, never client-supplied: a
+  // doc that carries challenge blocks IS a dojo, whatever the form says.
+  const challengesTotal = countChallenges(html);
+
   const meta = await publishDoc(
     {
       slug, title, subject, description, author, template, authorStyle,
       modulesDone, modulesTotal, currentModule,
-      // measured server-side from the doc itself, never client-supplied
+      kind: challengesTotal > 0 ? "dojo" : "doc",
+      challengesTotal,
       ...measureRead(html),
     },
     html,
