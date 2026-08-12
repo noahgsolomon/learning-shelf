@@ -61,6 +61,34 @@ try{var u=new URL(location.href);u.searchParams.delete("curtain");history.replac
 })();`;
 }
 
+// ── The dojo runtime ─────────────────────────────────────────────────────
+// A dojo doc ships only markup: the prose, and <section class="dojo-challenge">
+// blocks holding starter code and tests. The editor, the syntax highlighting,
+// the test runner and the recording client all live in one script the shelf
+// serves and injects here.
+//
+// Injected rather than inlined into the doc on purpose. It's ~1,200 lines that
+// would otherwise be copy-pasted into every dojo and go stale the moment the
+// runtime improved; served from our own origin, one fix reaches every dojo at
+// once — and the same-origin request is what lets the reader's owner cookie
+// authenticate their submissions without a secret ever touching the HTML.
+//
+// The trade-off, accepted: a dojo saved to disk and opened as a local file is
+// still readable prose, but its challenges won't run.
+// Bump on every meaningful runtime change: docs are long-lived pages and a
+// reader with a cached copy would otherwise keep the old editor forever.
+// 2 — Monaco upgrade (real completions, hover types, type-error squiggles).
+const DOJO_RUNTIME_VERSION = "2";
+
+export function injectDojoRuntime(html: string, slug: string): string {
+  const boot =
+    `<script>window.__DOJO__=${JSON.stringify({ slug })};</script>` +
+    `<script src="/dojo/runtime.js?v=${DOJO_RUNTIME_VERSION}" defer></script>`;
+  // Into <head> so the config is set during parse and the deferred runtime is
+  // queued before the challenges are reached.
+  return insertAfter(html, /<head[^>]*>/i, boot);
+}
+
 // A doc that already declares an icon keeps its own.
 export function hasOwnFavicon(html: string): boolean {
   return /<link[^>]+rel=["'][^"']*icon[^"']*["']/i.test(html);

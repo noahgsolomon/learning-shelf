@@ -9,7 +9,14 @@
 // tile by tile. Direct visits — no param — are served byte-identical.
 
 import { getDocHtml } from "@/lib/store";
-import { hasOwnFavicon, injectFavicon, injectReveal, isHexTint } from "@/lib/reveal";
+import { isDojoDoc } from "@/lib/dojo";
+import {
+  hasOwnFavicon,
+  injectDojoRuntime,
+  injectFavicon,
+  injectReveal,
+  isHexTint,
+} from "@/lib/reveal";
 import { fallenNoteHtml } from "@/lib/fallenNote";
 
 export async function GET(
@@ -32,6 +39,11 @@ export async function GET(
   // as ours. A doc that declares any icon link keeps its own.
   if (!hasOwnFavicon(html)) {
     html = injectFavicon(html);
+  }
+
+  // A doc carrying challenges gets the editor + test runner attached.
+  if (isDojoDoc(html)) {
+    html = injectDojoRuntime(html, slug);
   }
 
   const tint = new URL(request.url).searchParams.get("curtain");
